@@ -1,0 +1,55 @@
+{
+    "name": "boho",
+    "version": "1.0.0",
+    "description": "Random peer to peer video chat",
+    "main": "index.js",
+    "scripts": {
+        "start": "NODE_ENV=development nodemon server/index.js",
+        "build": "parcel build index.html",
+        "clean": "rimraf node_modules dist",
+        "server": "NODE_ENV=production node server/index.js"
+    },
+    "nodemonConfig": {
+        "watch": "server/*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/echoghi/boho.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/echoghi/boho/issues"
+    },
+    "homepage": "https://github.com/echoghi/boho#readme",
+    "dependencies": {
+        "@echoghi/hooks": "^1.5.1",
+        "express": "^4.17.1",
+        "immer": "^7.0.14",
+        "node-fetch": "^2.6.1",
+        "nodemon": "^2.0.6",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1",
+        "react-router-dom": "^5.2.0",
+        "socket.io": "^2.3.0",
+        "use-immer": "^0.4.1",
+        "use-socket.io-client": "^1.1.0"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.12.3",
+        "@babel/preset-env": "^7.12.1",
+        "@babel/preset-react": "^7.12.1",
+        "parcel-bundler": "^1.12.4",
+        "parcel-plugin-static-files-copy": "^2.5.0",
+        "rimraf": "^3.0.2",
+        "sass": "^1.28.0"
+    },
+    "browserslist": [
+        "last 3 and_chr versions",
+        "last 3 chrome versions",
+        "last 3 opera versions",
+        "last 3 ios_saf versions",
+        "last 3 safari versions"
+    ]
+}

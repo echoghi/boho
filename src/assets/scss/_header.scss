@@ -1,0 +1,28 @@
+header {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Open Sans';
+    height: 90px;
+    box-shadow: 1px 1px 16px 1px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+
+    div {
+        padding: 15px;
+    }
+
+    h1,
+    h2 {
+        margin: 0;
+    }
+
+    h1 {
+        font-size: 30px;
+        color: #3f9fff;
+        font-weight: bold;
+    }
+
+    h2 {
+        font-size: 12px;
+        font-weight: normal;
+    }
+}

@@ -1,0 +1,62 @@
+body,
+html {
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    background-color: #fff7ee;
+    overflow: hidden;
+}
+
+.boho {
+    &__home {
+        margin: 40px;
+    }
+    &__greeting {
+        margin: 0 auto;
+        max-width: 800px;
+        background-color: #fff;
+        box-shadow: 1px 1px 16px 1px rgba(0, 0, 0, 0.1);
+        line-height: 1.5;
+        border-radius: 5px;
+        text-align: left;
+        padding: 40px;
+    }
+
+    &__terms {
+        margin: 20px 0;
+        font-size: 12px;
+    }
+
+    &__options {
+        text-align: center;
+    }
+
+    &__warning {
+        font-size: 14px;
+    }
+
+    &__buttons {
+        margin: 0 auto;
+        width: 200px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        button {
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: #3f9fff;
+            color: #fff;
+            padding: 10px 20px;
+            cursor: pointer;
+            height: 48px;
+            border: none;
+
+            &:focus {
+                outline: none;
+            }
+        }
+    }
+}

@@ -1,2 +1,3 @@
 # boho
-Random peer to peer video chat
+
+Random peer to peer video and text chat
