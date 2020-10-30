@@ -28,6 +28,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 io.on('connection', (socket) => {
+    socket.emit('connection');
     console.log('A user connected');
 
     socket.broadcast.emit("You're now chatting with a random stranger.");
@@ -38,12 +39,10 @@ io.on('connection', (socket) => {
         io.emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
-    // when the client emits 'typing', we broadcast it to others
     socket.on('typing', (user) => {
         io.emit('typing', user);
     });
 
-    // when the client emits 'stop typing', we broadcast it to others
     socket.on('stop typing', (user) => {
         io.emit('stop typing', user);
     });
