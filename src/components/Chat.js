@@ -1,18 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import useSocket from 'use-socket.io-client';
 import { useImmer } from 'use-immer';
 
-export default function Chat({ video = false }) {
-    console.log(process.env);
+export default function Chat({ isVideoChat = false }) {
     const [socket] = useSocket('ws://localhost:3000');
     socket.connect();
 
+    const videoRef = useRef();
     const [user, setUser] = useState('');
     const [isConnected, setConnection] = useState(false);
     const [isConnectedToPartner, setPartnerConnection] = useState(false);
     const [message, setMessage] = useState('');
     const [isTyping, setTyping] = useState(false);
     const [messages, setMessages] = useImmer([]);
+
+    useEffect(() => {
+        if (!videoRef || !isVideoChat) {
+            return;
+        }
+        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+            let video = videoRef.current;
+            video.srcObject = stream;
+            video.play();
+        });
+    }, [videoRef]);
 
     useEffect(() => {
         // const info = await fetch('/ipinfo')
@@ -84,11 +95,11 @@ export default function Chat({ video = false }) {
     }
 
     return (
-        <div className={`chat__wrapper ${video ? 'video' : ''}`}>
-            {video && (
+        <div className={`chat__wrapper ${isVideoChat ? 'video' : ''}`}>
+            {isVideoChat && (
                 <div className="video__container">
                     <video autoPlay />
-                    <video autoPlay id="selfvideo" />
+                    <video autoPlay id="selfvideo" ref={videoRef} />
                 </div>
             )}
             <div className="text__chat--container">
