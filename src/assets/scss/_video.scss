@@ -1,0 +1,17 @@
+.video {
+    &__container {
+        margin: 0 auto;
+
+        video {
+            margin: 20px;
+            border-radius: 4px;
+            background-color: #555;
+            height: 405px;
+            width: 540px;
+
+            &#selfvideo {
+                margin: 5px 20px 20px;
+            }
+        }
+    }
+}

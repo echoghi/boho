@@ -89,3 +89,12 @@
         line-height: 1.4;
     }
 }
+
+.chat__wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+
+    &.video {
+        grid-template-columns: 560px 1fr;
+    }
+}

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 
 export const AppContext = createContext();
 export const AppProvider = ({ children }) => {
-    const [page, setPage] = useState('TEXT');
+    const [page, setPage] = useState('HOME');
 
     return <AppContext.Provider value={{ page, setPage }}>{children}</AppContext.Provider>;
 };

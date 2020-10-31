@@ -16,7 +16,7 @@ function AppIndex() {
                 return <Chat />;
 
             case 'VIDEO':
-                return <Chat />;
+                return <Chat video={true} />;
             default:
                 return <Home />;
         }

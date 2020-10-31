@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import useSocket from 'use-socket.io-client';
 import { useImmer } from 'use-immer';
 
-export default function Chat() {
+export default function Chat({ video = false }) {
+    console.log(process.env);
     const [socket] = useSocket('ws://localhost:3000');
     socket.connect();
 
@@ -83,32 +84,47 @@ export default function Chat() {
     }
 
     return (
-        <div className="text__chat--container">
-            <div className="text__chat">
-                <div className="message__container">
-                    <p className="message message__system">
-                        <SystemMessage />
-                    </p>
+        <div className={`chat__wrapper ${video ? 'video' : ''}`}>
+            {video && (
+                <div className="video__container">
+                    <video autoPlay />
+                    <video autoPlay id="selfvideo" />
                 </div>
+            )}
+            <div className="text__chat--container">
+                <div className="text__chat">
+                    <div className="message__container">
+                        <p className="message message__system">
+                            <SystemMessage />
+                        </p>
+                    </div>
 
-                {messages.map((message) => {
-                    return (
-                        <div className={`message__container ${user === message.user ? 'you' : ''}`} key={message.key}>
-                            <p className={`message ${user === message.user ? 'message__you' : 'message__stranger'}`}>
-                                {message.msg}
-                            </p>
-                        </div>
-                    );
-                })}
-                {isTyping && <p>Stranger is typing...</p>}
+                    {messages.map((message) => {
+                        return (
+                            <div
+                                className={`message__container ${user === message.user ? 'you' : ''}`}
+                                key={message.key}
+                            >
+                                <p
+                                    className={`message ${
+                                        user === message.user ? 'message__you' : 'message__stranger'
+                                    }`}
+                                >
+                                    {message.msg}
+                                </p>
+                            </div>
+                        );
+                    })}
+                    {isTyping && <p>Stranger is typing...</p>}
+                </div>
+                <form className="text__chat--controls" onSubmit={formHandler}>
+                    <button type="button">New</button>
+                    <textarea onChange={inputHandler} value={message} onKeyDown={typingHandler} />
+                    <button type="submit" disabled={message === '' || !isConnectedToPartner || !isConnected}>
+                        Send
+                    </button>
+                </form>
             </div>
-            <form className="text__chat--controls" onSubmit={formHandler}>
-                <button type="button">New</button>
-                <textarea onChange={inputHandler} value={message} onKeyDown={typingHandler} />
-                <button type="submit" disabled={message === '' || !isConnectedToPartner || !isConnected}>
-                    Send
-                </button>
-            </form>
         </div>
     );
 }
