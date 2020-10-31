@@ -69,15 +69,15 @@ io.on('connection', (socket) => {
     socket.on('new message', function (info) {
         const { user, msg } = info;
 
-        io.emit('receive message', { user: socket.id, msg, key: crypto.randomBytes(16).toString('hex') });
+        io.emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
-    socket.on('typing', () => {
-        io.emit('typing', socket.id);
+    socket.on('typing', (user) => {
+        io.emit('typing', user);
     });
 
-    socket.on('stop typing', () => {
-        io.emit('stop typing', socket.id);
+    socket.on('stop typing', (user) => {
+        io.emit('stop typing', user);
     });
 
     socket.on('disconnect', () => {

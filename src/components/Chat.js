@@ -25,12 +25,12 @@ export default function Chat({ isVideoChat = false }) {
         });
     }, [videoRef]);
 
-    useEffect(() => {
-        // const info = await fetch('/ipinfo')
-        //     .then((res) => res.json())
-        //     .catch((err) => err);
+    useEffect(async () => {
+        const info = await fetch('/ipinfo')
+            .then((res) => res.json())
+            .catch((err) => err);
 
-        setUser(socket.id);
+        setUser(info.user);
     }, []);
 
     useEffect(() => {
