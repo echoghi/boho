@@ -3,21 +3,22 @@ import useSocket from 'use-socket.io-client';
 import { useImmer } from 'use-immer';
 
 export default function Chat() {
+    const [socket] = useSocket('ws://localhost:3000');
+    socket.connect();
+
     const [user, setUser] = useState('');
     const [isConnected, setConnection] = useState(false);
     const [isConnectedToPartner, setPartnerConnection] = useState(false);
-    const [socket] = useSocket('ws://localhost:3000');
-    socket.connect();
     const [message, setMessage] = useState('');
     const [isTyping, setTyping] = useState(false);
     const [messages, setMessages] = useImmer([]);
 
-    useEffect(async () => {
-        const info = await fetch('/ipinfo')
-            .then((res) => res.json())
-            .catch((err) => err);
+    useEffect(() => {
+        // const info = await fetch('/ipinfo')
+        //     .then((res) => res.json())
+        //     .catch((err) => err);
 
-        setUser(info.user);
+        setUser(socket.id);
     }, []);
 
     useEffect(() => {
@@ -30,12 +31,15 @@ export default function Chat() {
 
         socket.on('connection', () => setConnection(true));
 
+        socket.on('chat start', () => setPartnerConnection(true));
+
         // show the typing message if the one typing is not the user
         socket.on('typing', (userName) => setTyping(userName !== user));
 
         return () => {
             socket.off('receive message');
             socket.off('typing');
+            socket.off('chat start');
             socket.off('connection');
         };
     });
@@ -101,7 +105,7 @@ export default function Chat() {
             <form className="text__chat--controls" onSubmit={formHandler}>
                 <button type="button">New</button>
                 <textarea onChange={inputHandler} value={message} onKeyDown={typingHandler} />
-                <button type="submit" disabled={message === ''}>
+                <button type="submit" disabled={message === '' || !isConnectedToPartner || !isConnected}>
                     Send
                 </button>
             </form>

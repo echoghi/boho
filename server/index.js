@@ -27,24 +27,57 @@ if (process.env.NODE_ENV === 'production') {
     app.use(bundler.middleware());
 }
 
+const queue = [];
+
+const log = (arr) => {
+    console.log('Queue: ');
+    for (let i = arr.length; i--; ) {
+        console.log(arr[i].id);
+    }
+    console.log('\n');
+};
+
+function findChatPartner(socket) {
+    if (queue.length > 0) {
+        const peer = queue.pop();
+        console.log(peer.id + ' was popped from queue\n');
+        log(queue);
+
+        const hash = crypto.createHash('sha256');
+        const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
+        console.log(roomName);
+
+        socket.join(roomName);
+        peer.emit('chat start', { name: socket.id, room: room });
+        socket.emit('chat start', { name: peer.id, room: room });
+    } else {
+        queue.push(socket);
+        console.log(socket.id + ' was pushed to queue\n');
+        log(queue);
+    }
+}
+
 io.on('connection', (socket) => {
+    queue.push(socket);
     socket.emit('connection');
     console.log('A user connected');
 
-    socket.broadcast.emit("You're now chatting with a random stranger.");
+    socket.on('find partner', () => {
+        findChatPartner(socket);
+    });
 
     socket.on('new message', function (info) {
         const { user, msg } = info;
 
-        io.emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
+        io.emit('receive message', { user: socket.id, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
-    socket.on('typing', (user) => {
-        io.emit('typing', user);
+    socket.on('typing', () => {
+        io.emit('typing', socket.id);
     });
 
-    socket.on('stop typing', (user) => {
-        io.emit('stop typing', user);
+    socket.on('stop typing', () => {
+        io.emit('stop typing', socket.id);
     });
 
     socket.on('disconnect', () => {

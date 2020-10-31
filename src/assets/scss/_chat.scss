@@ -23,6 +23,7 @@
                 background-color: $primary;
                 color: $white;
                 border: none;
+                font-weight: bold;
                 cursor: pointer;
                 transition: 0.2s background-color ease;
 
@@ -33,6 +34,7 @@
                 &:disabled {
                     color: $grey-light;
                     background-color: $grey;
+                    cursor: not-allowed;
                 }
             }
 
