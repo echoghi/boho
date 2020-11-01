@@ -4,6 +4,34 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const fetch = require('node-fetch');
+const faunadb = require('faunadb');
+
+async function saveUserInfo(user) {
+    const q = faunadb.query;
+    const client = new faunadb.Client({
+        secret: process.env.FAUNA_SECRET_KEY
+    });
+
+    // Check and see if the doc exists.
+    const doesUserExist = await client.query(q.Exists(q.Match(q.Index('user_by_id'), user)));
+    console.log(doesUserExist, user);
+    if (!doesUserExist) {
+        await client.query(
+            q.Create(q.Collection('users'), {
+                data: { user, visits: 0 }
+            })
+        );
+    }
+    // Fetch the document for-real
+    const document = await client.query(q.Get(q.Match(q.Index('user_by_id'), user)));
+    await client.query(
+        q.Update(document.ref, {
+            data: {
+                visits: document.data.visits + 1
+            }
+        })
+    );
+}
 
 app.get('/ipinfo', async (req, res) => {
     const ip = await fetch('https://api.ipify.org/?format=json')
@@ -13,7 +41,10 @@ app.get('/ipinfo', async (req, res) => {
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip.ip).digest('hex')}`;
 
-    res.send(JSON.stringify({ user }));
+    // save user to db and track visits
+    saveUserInfo(user);
+
+    res.send({ statusCode: 200, body: JSON.stringify({ user }) });
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -48,8 +79,8 @@ function findChatPartner(socket) {
         console.log(roomName);
 
         socket.join(roomName);
-        peer.emit('chat start', { name: socket.id, room: room });
-        socket.emit('chat start', { name: peer.id, room: room });
+        peer.emit('chat start', { name: socket.id });
+        socket.emit('chat start', { name: peer.id });
     } else {
         queue.push(socket);
         console.log(socket.id + ' was pushed to queue\n');

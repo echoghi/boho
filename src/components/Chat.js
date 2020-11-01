@@ -14,6 +14,7 @@ export default function Chat({ isVideoChat = false }) {
     const [isTyping, setTyping] = useState(false);
     const [messages, setMessages] = useImmer([]);
 
+    // request user video feed
     useEffect(() => {
         if (!videoRef || !isVideoChat) {
             return;
@@ -25,6 +26,7 @@ export default function Chat({ isVideoChat = false }) {
         });
     }, [videoRef]);
 
+    // save user to the chat queue
     useEffect(async () => {
         const info = await fetch('/ipinfo')
             .then((res) => res.json())
