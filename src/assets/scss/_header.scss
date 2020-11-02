@@ -10,6 +10,19 @@ header {
         padding: 15px;
     }
 
+    .count {
+        display: flex;
+        font-size: 30px;
+        font-weight: bold;
+        color: #3f9fff;
+        align-items: center;
+
+        span {
+            margin-left: 5px;
+            font-size: 20px;
+        }
+    }
+
     h1,
     h2 {
         margin: 0;

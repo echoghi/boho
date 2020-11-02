@@ -22,7 +22,7 @@ async function saveUserInfo(user) {
 
         await client.query(
             q.Create(q.Collection('users'), {
-                data: { user, visits: 0 }
+                data: { user }
             })
         );
     }
@@ -37,6 +37,12 @@ async function saveUserInfo(user) {
     // );
 }
 
+app.get('/count', async (req, res) => {
+    const count = Object.keys(io.sockets.connected).length;
+
+    res.send({ statusCode: 200, count });
+});
+
 app.get('/ipinfo', async (req, res) => {
     const ip = await fetch('https://api.ipify.org/?format=json')
         .then((res) => res.json())
@@ -45,7 +51,7 @@ app.get('/ipinfo', async (req, res) => {
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip.ip).digest('hex')}`;
 
-    // save user to db and track visits
+    // save user to db
     saveUserInfo(user);
 
     res.send({ statusCode: 200, body: JSON.stringify({ user }) });
