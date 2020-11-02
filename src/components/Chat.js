@@ -10,6 +10,7 @@ export default function Chat({ isVideoChat = false }) {
     const [user, setUser] = useState('');
     const [isConnected, setConnection] = useState(false);
     const [isConnectedToPartner, setPartnerConnection] = useState(false);
+    const [systemMessage, setSystemMessage] = useState('Connecting to server...');
     const [message, setMessage] = useState('');
     const [isTyping, setTyping] = useState(false);
     const [messages, setMessages] = useImmer([]);
@@ -20,7 +21,7 @@ export default function Chat({ isVideoChat = false }) {
             return;
         }
         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            let video = videoRef.current;
+            const video = videoRef.current;
             video.srcObject = stream;
             video.play();
         });
@@ -43,15 +44,27 @@ export default function Chat({ isVideoChat = false }) {
             })
         );
 
-        socket.on('connection', () => setConnection(true));
+        socket.on('connection', () => {
+            socket.emit('find partner');
+            setSystemMessage('Looking for someone you can chat with...');
+            setConnection(true);
+        });
+        socket.on('chat start', () => {
+            setSystemMessage("You're now chatting with a random stranger.");
+            setPartnerConnection(true);
+        });
 
-        socket.on('chat start', () => setPartnerConnection(true));
+        socket.on('no partners', () => {
+            setSystemMessage('Could not find anyone available to chat with :(');
+            setPartnerConnection(false);
+        });
 
         // show the typing message if the one typing is not the user
         socket.on('typing', (userName) => setTyping(userName !== user));
 
         return () => {
             socket.off('receive message');
+            socket.off('no partner');
             socket.off('typing');
             socket.off('chat start');
             socket.off('connection');
@@ -84,18 +97,6 @@ export default function Chat({ isVideoChat = false }) {
         setMessage(e.target.value);
     }
 
-    function SystemMessage() {
-        if (isConnected) {
-            if (isConnectedToPartner) {
-                return "You're now chatting with a random stranger.";
-            } else {
-                return 'Looking for someone you can chat with...';
-            }
-        } else {
-            return 'Connecting to server...';
-        }
-    }
-
     return (
         <div className={`chat__wrapper ${isVideoChat ? 'video' : ''}`}>
             {isVideoChat && (
@@ -107,27 +108,12 @@ export default function Chat({ isVideoChat = false }) {
             <div className="text__chat--container">
                 <div className="text__chat">
                     <div className="message__container">
-                        <p className="message message__system">
-                            <SystemMessage />
-                        </p>
+                        <p className="message message__system">{systemMessage}</p>
                     </div>
+                    {messages.map((message) => (
+                        <Message {...message} key={message.key} isUser={user === message.user} />
+                    ))}
 
-                    {messages.map((message) => {
-                        return (
-                            <div
-                                className={`message__container ${user === message.user ? 'you' : ''}`}
-                                key={message.key}
-                            >
-                                <p
-                                    className={`message ${
-                                        user === message.user ? 'message__you' : 'message__stranger'
-                                    }`}
-                                >
-                                    {message.msg}
-                                </p>
-                            </div>
-                        );
-                    })}
                     {isTyping && <p>Stranger is typing...</p>}
                 </div>
                 <form className="text__chat--controls" onSubmit={formHandler}>

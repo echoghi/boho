@@ -5,6 +5,8 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const fetch = require('node-fetch');
 const faunadb = require('faunadb');
+const e = require('express');
+const Stack = require('./stack');
 
 async function saveUserInfo(user) {
     const q = faunadb.query;
@@ -14,8 +16,10 @@ async function saveUserInfo(user) {
 
     // Check and see if the doc exists.
     const doesUserExist = await client.query(q.Exists(q.Match(q.Index('user_by_id'), user)));
-    console.log(doesUserExist, user);
+
     if (!doesUserExist) {
+        console.log(`new user being created`);
+
         await client.query(
             q.Create(q.Collection('users'), {
                 data: { user, visits: 0 }
@@ -23,14 +27,14 @@ async function saveUserInfo(user) {
         );
     }
     // Fetch the document for-real
-    const document = await client.query(q.Get(q.Match(q.Index('user_by_id'), user)));
-    await client.query(
-        q.Update(document.ref, {
-            data: {
-                visits: document.data.visits + 1
-            }
-        })
-    );
+    // const document = await client.query(q.Get(q.Match(q.Index('user_by_id'), user)));
+    // await client.query(
+    //     q.Update(document.ref, {
+    //         data: {
+    //             visits: document.data.visits + 1
+    //         }
+    //     })
+    // );
 }
 
 app.get('/ipinfo', async (req, res) => {
@@ -58,38 +62,45 @@ if (process.env.NODE_ENV === 'production') {
     app.use(bundler.middleware());
 }
 
-const queue = [];
+const queue = new Stack();
 
-const log = (arr) => {
-    console.log('Queue: ');
-    for (let i = arr.length; i--; ) {
-        console.log(arr[i].id);
-    }
-    console.log('\n');
-};
+function pushToStack(socket) {
+    const existingSocket = queue.find(
+        (existingSocket) =>
+            existingSocket.id === socket.id || socket.handshake.address === existingSocket.handshake.address
+    );
 
-function findChatPartner(socket) {
-    if (queue.length > 0) {
-        const peer = queue.pop();
-        console.log(peer.id + ' was popped from queue\n');
-        log(queue);
-
-        const hash = crypto.createHash('sha256');
-        const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
-        console.log(roomName);
-
-        socket.join(roomName);
-        peer.emit('chat start', { name: socket.id });
-        socket.emit('chat start', { name: peer.id });
-    } else {
+    if (!existingSocket) {
         queue.push(socket);
-        console.log(socket.id + ' was pushed to queue\n');
-        log(queue);
+        queue.print();
     }
 }
 
+function findChatPartner(socket) {
+    if (queue.length < 1 || !queue.length) {
+        socket.emit('no partners');
+        return;
+    }
+
+    const peer = queue.pop();
+
+    // check for dupes and same IP
+    if (socket.id === peer.id || socket.handshake.address === peer.handshake.address) {
+        findChatPartner(socket);
+    }
+
+    const hash = crypto.createHash('sha256');
+    const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
+    console.log('room created:', roomName);
+
+    socket.join(roomName);
+    peer.join(roomName);
+    io.in(roomName).emit('chat start');
+}
+
 io.on('connection', (socket) => {
-    queue.push(socket);
+    pushToStack(socket);
+
     socket.emit('connection');
     console.log('A user connected');
 
@@ -103,13 +114,13 @@ io.on('connection', (socket) => {
         io.emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
-    socket.on('typing', (user) => {
-        io.emit('typing', user);
-    });
+    // socket.on('typing', (user) => {
+    //     socket.emit('typing', user);
+    // });
 
-    socket.on('stop typing', (user) => {
-        io.emit('stop typing', user);
-    });
+    // socket.on('stop typing', (user) => {
+    //     socket.emit('stop typing', user);
+    // });
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
