@@ -5,7 +5,6 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const fetch = require('node-fetch');
 const faunadb = require('faunadb');
-const e = require('express');
 const Stack = require('./stack');
 
 async function saveUserInfo(user) {
@@ -83,25 +82,27 @@ function pushToStack(socket) {
 }
 
 function findChatPartner(socket) {
-    if (queue.length < 1 || !queue.length) {
+    if (queue.isEmpty()) {
+        console.log('no partners to chat with :(');
         socket.emit('no partners');
         return;
     }
 
-    const peer = queue.pop();
+    const peer = queue.next();
 
     // check for dupes and same IP
     if (socket.id === peer.id || socket.handshake.address === peer.handshake.address) {
         findChatPartner(socket);
+    } else {
+        const hash = crypto.createHash('sha256');
+        const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
+        console.log('room created:', roomName);
+    
+        socket.join(roomName);
+        peer.join(roomName);
+        io.in(roomName).emit('chat start');
     }
 
-    const hash = crypto.createHash('sha256');
-    const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
-    console.log('room created:', roomName);
-
-    socket.join(roomName);
-    peer.join(roomName);
-    io.in(roomName).emit('chat start');
 }
 
 io.on('connection', (socket) => {

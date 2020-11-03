@@ -2,8 +2,6 @@
 module.exports = function Stack() {
     this.collection = [];
 
-    this.length = this.collection.length;
-
     this.print = () => {
         console.log('\n');
         console.log(`Queue (${this.collection.length}):`);
@@ -19,12 +17,8 @@ module.exports = function Stack() {
         this.collection.push(item);
     };
 
-    this.pop = () => {
+    this.next = () => {
         return this.collection.shift();
-    };
-
-    this.peek = () => {
-        return this.collection.pop();
     };
 
     this.isEmpty = () => {

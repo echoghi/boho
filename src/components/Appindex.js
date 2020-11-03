@@ -4,7 +4,7 @@ import Chat from './Chat';
 import Header from './Header';
 import Home from './Home';
 
-function AppIndex() {
+export default function AppIndex() {
     const { page } = useAppState();
 
     function App() {
@@ -29,5 +29,3 @@ function AppIndex() {
         </div>
     );
 }
-
-export default AppIndex;

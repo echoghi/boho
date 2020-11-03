@@ -924,11 +924,6 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@echoghi/hooks@^1.5.1":
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/@echoghi/hooks/-/hooks-1.5.1.tgz#42380d3bfdb2e19ea457e51905d96e27b33aa7f2"
-  integrity sha512-mmAVxZ8BNk/nXwLlnuwrBgjafzuKDm0/VL2WqaSySKMeYAeFz+tOqgnxQqU7EXndyxRpNLvKhvLhG/TFz8joEQ==
-
 "@iarna/toml@^2.2.0":
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
