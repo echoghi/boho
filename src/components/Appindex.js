@@ -8,20 +8,18 @@ export default function AppIndex() {
     const { page } = useAppState();
 
     function App() {
-        // switch (page) {
-        //     case 'HOME':
-        //         return <Home />;
+        switch (page) {
+            case 'HOME':
+                return <Home />;
 
-        //     case 'TEXT':
-        //         return <Chat />;
+            case 'TEXT':
+                return <Chat />;
 
-        //     case 'VIDEO':
-        //         return <Chat isVideoChat={true} />;
-        //     default:
-        //         return <Home />;
-        // }
-
-        return <div>Hello</div>;
+            case 'VIDEO':
+                return <Chat isVideoChat={true} />;
+            default:
+                return <Home />;
+        }  
     }
 
     return (
