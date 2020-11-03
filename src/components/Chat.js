@@ -17,15 +17,20 @@ export default function Chat({ isVideoChat = false }) {
     const [messages, setMessages] = useImmer([]);
 
     // request user video feed
-    useEffect(() => {
-        if (!videoRef || !isVideoChat || !navigator.mediaDevices) {
+    useEffect(async () => {
+        if (!videoRef || !isVideoChat) {
             return;
         }
-        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             const video = videoRef.current;
+
             video.srcObject = stream;
             video.play();
-        });
+        } catch (err) {
+            console.log(err);
+        }
     }, [videoRef]);
 
     // save user to the chat queue
