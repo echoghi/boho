@@ -3,7 +3,7 @@ import useSocket from 'use-socket.io-client';
 import { useImmer } from 'use-immer';
 
 export default function Chat({ isVideoChat = false }) {
-    const socketURL = process.env.NODE_ENV !== 'production' ? 'ws://localhost:3000' : 'ws://134.122.119.104';
+    const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'ws://134.122.119.104';
     const [socket] = useSocket(socketURL);
     socket.connect();
 
@@ -18,7 +18,7 @@ export default function Chat({ isVideoChat = false }) {
 
     // request user video feed
     useEffect(() => {
-        if (!videoRef || !isVideoChat) {
+        if (!videoRef || !isVideoChat || !navigator.mediaDevices) {
             return;
         }
         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
