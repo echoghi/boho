@@ -3,7 +3,8 @@ import useSocket from 'use-socket.io-client';
 import { useImmer } from 'use-immer';
 
 export default function Chat({ isVideoChat = false }) {
-    const [socket] = useSocket('ws://localhost:3000');
+    const socketURL = process.env.NODE_ENV !== 'production' ? 'ws://localhost:3000' : 'ws://134.122.119.104';
+    const [socket] = useSocket(socketURL);
     socket.connect();
 
     const videoRef = useRef();

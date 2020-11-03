@@ -4,8 +4,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 
-import { AppProvider } from './context/appContext';
 import AppIndex from './components/AppIndex';
+import { AppProvider } from './context/appContext';
 
 ReactDOM.render(
     <AppProvider>
