@@ -6,6 +6,7 @@ export default function Header() {
     const [userCount, setUserCount] = useState(0);
     const [formattedCount, setFormattedCount] = useState('');
 
+    // round count up to nearest hundred
     function roundCount(num) {
         return Math.ceil(num / 100) * 100;
     }
@@ -19,6 +20,8 @@ export default function Header() {
             .then((res) => res.json())
             .catch((err) => err);
 
+        console.log(info);
+
         const count = roundCount(info.count);
         const formattedCount = formatCount(count);
         setUserCount(count);
@@ -31,7 +34,7 @@ export default function Header() {
                 <h1 onClick={() => setPage('HOME')}>Boho</h1>
                 <h2>An easy way to meet random people</h2>
             </div>
-            {userCount >= 100 && (
+            {userCount > 100 && (
                 <div className="count">
                     {formattedCount}
                     <span>online now</span>

@@ -23,6 +23,7 @@ export default function Chat({ isVideoChat = false }) {
         }
 
         try {
+            // navigator.mediaDevices only available on prod with HTTPS
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             const video = videoRef.current;
 
@@ -55,6 +56,11 @@ export default function Chat({ isVideoChat = false }) {
             setSystemMessage('Looking for someone you can chat with...');
             setConnection(true);
         });
+
+        socket.on('searching', () => {
+            setSystemMessage('Looking for someone you can chat with...');
+        });
+
         socket.on('chat start', () => {
             setSystemMessage("You're now chatting with a random stranger.");
             setPartnerConnection(true);
@@ -72,6 +78,7 @@ export default function Chat({ isVideoChat = false }) {
             socket.off('receive message');
             socket.off('no partner');
             socket.off('typing');
+            socket.off('searching');
             socket.off('chat start');
             socket.off('connection');
         };

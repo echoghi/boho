@@ -37,9 +37,10 @@ async function saveUserInfo(user) {
 }
 
 app.get('/count', async (req, res) => {
-    const count = Object.keys(io.sockets.connected).length;
+    const socketIDs = Object.keys(io.sockets.connected);
+    const count = socketIDs.length;
 
-    res.send({ statusCode: 200, count });
+    res.send({ statusCode: 200, count, socketIDs });
 });
 
 app.get('/ipinfo', async (req, res) => {
@@ -82,6 +83,7 @@ function pushToStack(socket) {
 }
 
 function findChatPartner(socket) {
+    socket.emit('searching');
     if (queue.isEmpty()) {
         console.log('no partners to chat with :(');
         socket.emit('no partners');
@@ -97,12 +99,11 @@ function findChatPartner(socket) {
         const hash = crypto.createHash('sha256');
         const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
         console.log('room created:', roomName);
-    
+
         socket.join(roomName);
         peer.join(roomName);
         io.in(roomName).emit('chat start');
     }
-
 }
 
 io.on('connection', (socket) => {
