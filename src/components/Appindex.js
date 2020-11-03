@@ -17,9 +17,10 @@ export default function AppIndex() {
 
             case 'VIDEO':
                 return <Chat isVideoChat={true} />;
+
             default:
                 return <Home />;
-        }  
+        }
     }
 
     return (

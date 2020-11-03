@@ -1,7 +1,7 @@
 {
     "name": "boho",
     "version": "1.0.0",
-    "description": "Random peer to peer video chat",
+    "description": "Random peer to peer text and video chat",
     "main": "src/app.js",
     "scripts": {
         "start": "NODE_ENV=development nodemon server/index.js",
@@ -41,12 +41,8 @@
         "@babel/preset-env": "^7.12.1",
         "@babel/preset-react": "^7.12.1",
         "parcel-bundler": "^1.12.4",
-        "parcel-plugin-static-files-copy": "^2.5.0",
         "rimraf": "^3.0.2",
         "sass": "^1.28.0"
-    },
-    "alias": {
-        "components": "./src/components"
     },
     "browserslist": [
         "last 3 and_chr versions",
