@@ -46,7 +46,7 @@ export default function Home() {
                 THE PROVIDER OF Boho, AND ANY OTHER PERSON OR ENTITY ASSOCIATED WITH Boho'S OPERATION, SHALL NOT BE HELD
                 LIABLE FOR ANY DIRECT OR INDIRECT DAMAGES ARISING FROM THE USE OF Boho, OR ANY OTHER DAMAGES RELATED TO
                 Boho OF ANY KIND WHATSOEVER. By using Boho, you accept the practices outlined in Boho's PRIVACY POLICY
-                and INFORMATION ABOUT THE USE OF COOKIES (updated 2014-06-03 – contains important information about
+                and INFORMATION ABOUT THE USE OF COOKIES (updated 2020-11-03 – contains important information about
                 video chat monitoring).
             </div>
         </div>
