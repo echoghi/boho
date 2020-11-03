@@ -103,6 +103,10 @@ export default function Chat({ isVideoChat = false }) {
         setMessage(e.target.value);
     }
 
+    function findNewPartner() {
+        socket.emit('find partner');
+    }
+
     return (
         <div className={`chat__wrapper ${isVideoChat ? 'video' : ''}`}>
             {isVideoChat && (
@@ -123,7 +127,9 @@ export default function Chat({ isVideoChat = false }) {
                     {isTyping && <p>Stranger is typing...</p>}
                 </div>
                 <form className="text__chat--controls" onSubmit={formHandler}>
-                    <button type="button">New</button>
+                    <button type="button" onClick={findNewPartner}>
+                        New
+                    </button>
                     <textarea onChange={inputHandler} value={message} onKeyDown={typingHandler} />
                     <button type="submit" disabled={message === '' || !isConnectedToPartner || !isConnected}>
                         Send
