@@ -45,6 +45,9 @@
         "rimraf": "^3.0.2",
         "sass": "^1.28.0"
     },
+    "alias": {
+        "components": "./src/components"
+    },
     "browserslist": [
         "last 3 and_chr versions",
         "last 3 chrome versions",
