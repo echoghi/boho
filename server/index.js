@@ -82,27 +82,40 @@ function pushToStack(socket) {
     }
 }
 
-function findChatPartner(socket) {
-    socket.emit('searching');
-    if (queue.isEmpty()) {
-        console.log('no partners to chat with :(');
-        socket.emit('no partners');
-        return;
-    }
+let searchCount = 0;
 
-    const peer = queue.next();
+function delaySearch(socket) {
+    setTimeout(() => {
+        searchCount++;
 
-    // check for dupes and same IP
-    if (socket.id === peer.id || socket.handshake.address === peer.handshake.address) {
+        if (searchCount >= 10) {
+            return socket.emit('no partners');
+        } else if (searchCount > 5) {
+            socket.emit('still searching');
+        }
+
         findChatPartner(socket);
-    } else {
-        const hash = crypto.createHash('sha256');
-        const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
-        console.log('room created:', roomName);
+    }, 2500);
+}
 
-        socket.join(roomName);
-        peer.join(roomName);
-        io.in(roomName).emit('chat start');
+function findChatPartner(socket) {
+    if (queue.isEmpty()) {
+        delaySearch(socket);
+    } else {
+        const peer = queue.next();
+
+        // check for dupes and same IP
+        if (socket.id === peer.id || socket.handshake.address === peer.handshake.address) {
+            findChatPartner(socket);
+        } else {
+            const hash = crypto.createHash('sha256');
+            const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
+            console.log('room created:', roomName);
+
+            socket.join(roomName);
+            peer.join(roomName);
+            io.in(roomName).emit('chat start');
+        }
     }
 }
 
@@ -113,6 +126,7 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     socket.on('find partner', () => {
+        socket.emit('searching');
         findChatPartner(socket);
     });
 

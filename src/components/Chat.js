@@ -61,13 +61,17 @@ export default function Chat({ isVideoChat = false }) {
             setSystemMessage('Looking for someone you can chat with...');
         });
 
+        socket.on('still searching', () => {
+            setSystemMessage('Still looking for a partner...');
+        });
+
         socket.on('chat start', () => {
             setSystemMessage("You're now chatting with a random stranger.");
             setPartnerConnection(true);
         });
 
         socket.on('no partners', () => {
-            setSystemMessage('Could not find anyone available to chat with :(');
+            setSystemMessage("Couldn't find anyone available to chat with :(");
             setPartnerConnection(false);
         });
 
@@ -79,6 +83,7 @@ export default function Chat({ isVideoChat = false }) {
             socket.off('no partner');
             socket.off('typing');
             socket.off('searching');
+            socket.off('still searching');
             socket.off('chat start');
             socket.off('connection');
         };
