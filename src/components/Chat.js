@@ -42,7 +42,9 @@ export default function Chat({ isVideoChat = false }) {
             .then((res) => res.json())
             .catch((err) => err);
 
-        setUser(info.user);
+        setUser(info.body.user);
+
+        socket.emit('find partner', info.body.user);
     }, []);
 
     useEffect(() => {
@@ -54,7 +56,6 @@ export default function Chat({ isVideoChat = false }) {
         );
 
         socket.on('connection', () => {
-            socket.emit('find partner');
             setSystemMessage('Looking for someone you can chat with...');
             setConnection(true);
         });

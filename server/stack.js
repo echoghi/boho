@@ -7,8 +7,8 @@ module.exports = function Stack() {
         console.log(`Queue (${this.collection.length}): [`);
         for (let i = this.collection.length; i--; ) {
             console.log({
-                sid: this.collection[i].id,
-                ip: this.collection[i].handshake.address
+                sid: this.collection[i].socket.id,
+                user: this.collection[i].user
             });
         }
 
@@ -18,7 +18,7 @@ module.exports = function Stack() {
     this.find = (expression) => this.collection.find(expression);
 
     this.push = (item) => {
-        const existingSocket = this.collection.find((existingSocket) => existingSocket.id === item.id);
+        const existingSocket = this.collection.find((user) => user.socket.id === item.socket.id);
 
         if (!existingSocket) {
             this.collection.push(item);
@@ -26,7 +26,7 @@ module.exports = function Stack() {
     };
 
     this.remove = (id) => {
-        this.collection = this.collection.filter((socket) => socket.id !== id);
+        this.collection = this.collection.filter((user) => user.socket.id !== id);
     };
 
     this.next = () => {

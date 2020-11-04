@@ -24,7 +24,7 @@ app.get('/ipinfo', async (req, res) => {
     // save user to db
     // saveUserInfo(user);
 
-    res.send({ statusCode: 200, body: JSON.stringify({ user }) });
+    res.send({ statusCode: 200, body: { user } });
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -40,8 +40,8 @@ if (process.env.NODE_ENV === 'production') {
 
 const queue = new Stack();
 
-function pushToStack(socket) {
-    queue.push(socket);
+function pushToStack(socket, user) {
+    queue.push({ socket: socket, user });
     queue.print();
 }
 
@@ -52,7 +52,7 @@ function removeFromStack(id) {
 
 let searchCount = 0;
 
-function delaySearch(socket) {
+function delaySearch(socket, user) {
     setTimeout(() => {
         searchCount++;
 
@@ -62,28 +62,28 @@ function delaySearch(socket) {
             io.to(socket.id).emit('still searching');
         }
 
-        findChatPartner(socket);
+        findChatPartner(socket, user);
     }, 2500);
 }
 
-function findChatPartner(socket) {
+function findChatPartner(socket, user) {
     if (queue.isEmpty()) {
-        return delaySearch(socket);
+        return delaySearch(socket, user);
     } else {
         const peer = queue.next();
 
         // if the sockets are the same IP, keep searching
-        if (peer.handshake.address === socket.handshake.address) {
-            return delaySearch(socket);
+        if (peer.user === user) {
+            return delaySearch(socket, user);
         }
 
         const hash = crypto.createHash('sha256');
-        const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
+        const roomName = `room-${hash.update(`${user}-${peer.user}`).digest('hex')}`;
         console.log('\n');
         console.log('room created:', roomName);
 
         socket.join(roomName);
-        peer.join(roomName);
+        peer.socket.join(roomName);
         io.in(roomName).emit('chat start');
 
         return peer;
@@ -93,14 +93,13 @@ function findChatPartner(socket) {
 io.on('connection', (socket) => {
     socket.partner = null;
 
-    pushToStack(socket);
-
     socket.emit('connection');
     console.log('A user connected');
 
-    socket.on('find partner', () => {
+    socket.on('find partner', (user) => {
+        pushToStack(socket, user);
         socket.emit('searching');
-        socket.partner = findChatPartner(socket);
+        socket.partner = findChatPartner(socket, user);
     });
 
     socket.on('new message', function (info) {
