@@ -3,6 +3,7 @@ import useSocket from 'use-socket.io-client';
 import { useImmer } from 'use-immer';
 
 export default function Chat({ isVideoChat = false }) {
+    console.log(process.env.NODE_ENV);
     const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'wss://www.bohochat.com';
     const [socket] = useSocket(socketURL);
     socket.connect();
