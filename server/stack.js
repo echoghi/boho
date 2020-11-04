@@ -18,7 +18,15 @@ module.exports = function Stack() {
     this.find = (expression) => this.collection.find(expression);
 
     this.push = (item) => {
-        this.collection.push(item);
+        const existingSocket = this.collection.find((existingSocket) => existingSocket.id === item.id);
+
+        if (!existingSocket) {
+            this.collection.push(item);
+        }
+    };
+
+    this.remove = (id) => {
+        this.collection = this.collection.filter((socket) => socket.id !== id);
     };
 
     this.next = () => {

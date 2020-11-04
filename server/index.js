@@ -41,12 +41,13 @@ if (process.env.NODE_ENV === 'production') {
 const queue = new Stack();
 
 function pushToStack(socket) {
-    const existingSocket = queue.find((existingSocket) => existingSocket.id === socket.id);
+    queue.push(socket);
+    queue.print();
+}
 
-    if (!existingSocket) {
-        queue.push(socket);
-        queue.print();
-    }
+function removeFromStack(id) {
+    queue.remove(id);
+    queue.print();
 }
 
 let searchCount = 0;
@@ -113,6 +114,7 @@ io.on('connection', (socket) => {
     // });
 
     socket.on('disconnect', () => {
+        removeFromStack(socket.id);
         console.log('user disconnected');
     });
 });
