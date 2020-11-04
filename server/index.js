@@ -4,7 +4,6 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const fetch = require('node-fetch');
-const faunadb = require('faunadb');
 const Stack = require('./stack');
 
 app.get('/count', async (req, res) => {
@@ -42,11 +41,7 @@ if (process.env.NODE_ENV === 'production') {
 const queue = new Stack();
 
 function pushToStack(socket) {
-    // || socket.handshake.address === existingSocket.handshake.address
-    const existingSocket = queue.find(
-        (existingSocket) =>
-            existingSocket.id === socket.id || socket.handshake.address === existingSocket.handshake.address
-    );
+    const existingSocket = queue.find((existingSocket) => existingSocket.id === socket.id);
 
     if (!existingSocket) {
         queue.push(socket);
@@ -72,12 +67,18 @@ function delaySearch(socket) {
 
 function findChatPartner(socket) {
     if (queue.isEmpty()) {
-        delaySearch(socket);
+        return delaySearch(socket);
     } else {
         const peer = queue.next();
 
+        // if the sockets are the same IP, keep searching
+        if (peer.handshake.address === socket.handshake.address) {
+            return delaySearch(socket);
+        }
+
         const hash = crypto.createHash('sha256');
         const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
+        console.log('\n');
         console.log('room created:', roomName);
 
         socket.join(roomName);
@@ -100,7 +101,7 @@ io.on('connection', (socket) => {
     socket.on('new message', function (info) {
         const { user, msg } = info;
 
-        io.emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
+        socket.emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
     // socket.on('typing', (user) => {
