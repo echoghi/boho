@@ -7,11 +7,19 @@ html {
 body {
     background-color: #fff7ee;
     overflow: hidden;
+
+    @media (max-width: 768px) {
+        overflow: auto;
+    }
 }
 
 .boho {
     &__home {
         margin: 40px;
+
+        @media (max-width: 768px) {
+            margin: 20px;
+        }
     }
     &__greeting {
         margin: 0 auto;
@@ -22,6 +30,11 @@ body {
         border-radius: 5px;
         text-align: left;
         padding: 40px;
+
+        @media (max-width: 768px) {
+            padding: 20px;
+            font-size: 15px;
+        }
     }
 
     &__terms {
