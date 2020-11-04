@@ -106,6 +106,8 @@ export default function Chat({ isVideoChat = false }) {
         socket.emit('typing', user);
 
         if (e.which === 13) {
+            e.preventDefault();
+
             sendMessage(message);
             setMessage('');
 
@@ -145,7 +147,7 @@ export default function Chat({ isVideoChat = false }) {
                         New
                     </button>
                     <textarea onChange={inputHandler} value={message} onKeyDown={typingHandler} />
-                    <button type="submit" disabled={message === '' || !isConnectedToPartner || !isConnected}>
+                    <button type="submit" disabled={!message || !isConnectedToPartner || !isConnected}>
                         Send
                     </button>
                 </form>
