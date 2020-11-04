@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import useSocket from 'use-socket.io-client';
 import { useImmer } from 'use-immer';
 
+import Message from './Message';
+
 export default function Chat({ isVideoChat = false }) {
     const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'wss://www.bohochat.com';
     const [socket] = useSocket(socketURL);

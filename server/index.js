@@ -42,6 +42,7 @@ if (process.env.NODE_ENV === 'production') {
 const queue = new Stack();
 
 function pushToStack(socket) {
+    // || socket.handshake.address === existingSocket.handshake.address
     const existingSocket = queue.find(
         (existingSocket) =>
             existingSocket.id === socket.id || socket.handshake.address === existingSocket.handshake.address
@@ -75,18 +76,13 @@ function findChatPartner(socket) {
     } else {
         const peer = queue.next();
 
-        // check for dupes and same IP
-        if (socket.id === peer.id || socket.handshake.address === peer.handshake.address) {
-            delaySearch(socket);
-        } else {
-            const hash = crypto.createHash('sha256');
-            const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
-            console.log('room created:', roomName);
+        const hash = crypto.createHash('sha256');
+        const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
+        console.log('room created:', roomName);
 
-            socket.join(roomName);
-            peer.join(roomName);
-            io.in(roomName).emit('chat start');
-        }
+        socket.join(roomName);
+        peer.join(roomName);
+        io.in(roomName).emit('chat start');
     }
 }
 
