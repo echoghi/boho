@@ -4,11 +4,15 @@ module.exports = function Stack() {
 
     this.print = () => {
         console.log('\n');
-        console.log(`Queue (${this.collection.length}):`);
+        console.log(`Queue (${this.collection.length}): [`);
         for (let i = this.collection.length; i--; ) {
-            console.log(this.collection[i].id);
+            console.log({
+                sid: this.collection[i].id,
+                ip: this.collection[i].handshake.address
+            });
         }
-        console.log('\n');
+
+        console.log(']\n');
     };
 
     this.find = (expression) => this.collection.find(expression);
