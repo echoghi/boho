@@ -52,7 +52,7 @@ app.get('/ipinfo', async (req, res) => {
     const user = `0x${hash.update(ip.ip).digest('hex')}`;
 
     // save user to db
-    saveUserInfo(user);
+    // saveUserInfo(user);
 
     res.send({ statusCode: 200, body: JSON.stringify({ user }) });
 });
