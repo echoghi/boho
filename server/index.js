@@ -85,10 +85,14 @@ function findChatPartner(socket) {
         socket.join(roomName);
         peer.join(roomName);
         io.in(roomName).emit('chat start');
+
+        return peer;
     }
 }
 
 io.on('connection', (socket) => {
+    socket.partner = null;
+
     pushToStack(socket);
 
     socket.emit('connection');
@@ -96,24 +100,31 @@ io.on('connection', (socket) => {
 
     socket.on('find partner', () => {
         socket.emit('searching');
-        findChatPartner(socket);
+        socket.partner = findChatPartner(socket);
     });
 
     socket.on('new message', function (info) {
         const { user, msg } = info;
 
-        socket.emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
+        io.to(socket.id).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
-    // socket.on('typing', (user) => {
-    //     socket.emit('typing', user);
-    // });
+    socket.on('typing', function () {
+        socket.broadcast.to(socket.partner).emit('typing');
+    });
 
-    // socket.on('stop typing', (user) => {
-    //     socket.emit('stop typing', user);
-    // });
+    socket.on('stop typing', () => {
+        socket.broadcast.to(socket.partner).emit('stop typing');
+    });
 
     socket.on('disconnect', () => {
+        if (socket.partner != null) {
+            socket.broadcast.to(socket.partner).emit('typing', false);
+            socket.broadcast
+                .to(socket.partner)
+                .emit('disconnecting now', 'Your Partner has disconnected . Refresh page to chat again');
+        }
+
         removeFromStack(socket.id);
         console.log('user disconnected');
     });

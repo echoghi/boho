@@ -7,9 +7,9 @@ import Message from './Message';
 export default function Chat({ isVideoChat = false }) {
     const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'wss://www.bohochat.com';
     const [socket] = useSocket(socketURL);
-    socket.connect();
 
     const videoRef = useRef();
+    const textRef = useRef();
     const [user, setUser] = useState('');
     const [isConnected, setConnection] = useState(false);
     const [isConnectedToPartner, setPartnerConnection] = useState(false);
@@ -70,6 +70,7 @@ export default function Chat({ isVideoChat = false }) {
         socket.on('chat start', () => {
             setSystemMessage("You're now chatting with a random stranger.");
             setPartnerConnection(true);
+            textRef.current.focus();
         });
 
         socket.on('no partners', () => {
@@ -78,11 +79,11 @@ export default function Chat({ isVideoChat = false }) {
         });
 
         // show the typing message if the one typing is not the user
-        socket.on('typing', (userName) => setTyping(userName !== user));
+        socket.on('typing', () => setTyping(true));
 
         return () => {
             socket.off('receive message');
-            socket.off('no partner');
+            socket.off('no partners');
             socket.off('typing');
             socket.off('searching');
             socket.off('still searching');
@@ -146,7 +147,13 @@ export default function Chat({ isVideoChat = false }) {
                     <button type="button" onClick={findNewPartner}>
                         New
                     </button>
-                    <textarea onChange={inputHandler} value={message} onKeyDown={typingHandler} />
+                    <textarea
+                        ref={textRef}
+                        onChange={inputHandler}
+                        value={message}
+                        onKeyDown={typingHandler}
+                        // disabled={!message || !isConnectedToPartner || !isConnected}
+                    />
                     <button type="submit" disabled={!message || !isConnectedToPartner || !isConnected}>
                         Send
                     </button>

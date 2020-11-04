@@ -51,6 +51,10 @@
                 &:focus {
                     outline: none;
                 }
+
+                &:disabled {
+                    background-color: #fff;
+                }
             }
         }
     }
