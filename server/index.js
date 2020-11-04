@@ -57,9 +57,9 @@ function delaySearch(socket) {
         searchCount++;
 
         if (searchCount >= 10) {
-            return socket.emit('no partners');
+            return io.to(socket.id).emit('no partners');
         } else if (searchCount > 5) {
-            socket.emit('still searching');
+            io.to(socket.id).emit('still searching');
         }
 
         findChatPartner(socket);
