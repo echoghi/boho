@@ -106,7 +106,7 @@ function findChatPartner(socket) {
 
         // check for dupes and same IP
         if (socket.id === peer.id || socket.handshake.address === peer.handshake.address) {
-            findChatPartner(socket);
+            delaySearch(socket);
         } else {
             const hash = crypto.createHash('sha256');
             const roomName = `room-${hash.update(`${socket.id}-${peer.id}`).digest('hex')}`;
