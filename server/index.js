@@ -42,8 +42,6 @@ function pushToStack(socket, user) {
 }
 
 function removeFromStack(id) {
-    console.log('\n');
-    console.log(`removing ${id}`);
     queue.remove(id);
 }
 

@@ -5702,7 +5702,7 @@ socket.io-client@2.3.0:
     socket.io-parser "~3.3.0"
     to-array "0.1.4"
 
-socket.io-client@^2.2.0:
+socket.io-client@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/socket.io-client/-/socket.io-client-2.3.1.tgz#91a4038ef4d03c19967bb3c646fec6e0eaa78cff"
   integrity sha512-YXmXn3pA8abPOY//JtYxou95Ihvzmg8U6kQyolArkIyLd0pgVhrfor/iMsox8cn07WCOOvvuJ6XKegzIucPutQ==
@@ -6378,13 +6378,6 @@ use-immer@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/use-immer/-/use-immer-0.4.1.tgz#82a372e666496bfd49750673be78c17fcd375ca8"
   integrity sha512-lXukZMx+sWwkWOLMyd5/5Obr6xTDFGSOJ85/nGQk/qhpWAohaFWrYJkT2+70seU/F6Dh7S41c9X6TWL9ljReGQ==
-
-use-socket.io-client@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/use-socket.io-client/-/use-socket.io-client-1.1.0.tgz#3cb9b009dd1884fad209cd9e6d099bb99b5bec2c"
-  integrity sha512-osUeJkLbV6EDprbsjybB3MU5wHKGD3sMuHaSqIbr4Lo2SMGCpX5EhzW97/j8ToYvVNM+Bjkyi+WbKoTkXUXdGQ==
-  dependencies:
-    socket.io-client "^2.2.0"
 
 use@^3.1.0:
   version "3.1.1"

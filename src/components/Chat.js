@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useImmer } from 'use-immer';
-import useSocket from 'use-socket.io-client';
+import useSocket from '../hooks/useSocket';
 
 import Message from './Message';
 
