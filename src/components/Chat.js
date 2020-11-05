@@ -153,7 +153,7 @@ export default function Chat({ isVideoChat = false }) {
                         onChange={inputHandler}
                         value={message}
                         onKeyDown={typingHandler}
-                        // disabled={!message || !isConnectedToPartner || !isConnected}
+                        disabled={!message || !isConnectedToPartner || !isConnected}
                     />
                     <button type="submit" disabled={!message || !isConnectedToPartner || !isConnected}>
                         Send

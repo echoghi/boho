@@ -51,6 +51,7 @@ function removeFromStack(id) {
 }
 
 let searchCount = 0;
+let roomName = '';
 
 function delaySearch(socket, user) {
     setTimeout(() => {
@@ -71,58 +72,51 @@ function findChatPartner(socket, user) {
         return delaySearch(socket, user);
     } else {
         const peer = queue.next();
-
+        console.log('socketIsSameUser', user === peer.user);
         // if the sockets are the same IP, keep searching
         if (peer.user === user) {
             return delaySearch(socket, user);
         }
 
         const hash = crypto.createHash('sha256');
-        const roomName = `room-${hash.update(`${user}-${peer.user}`).digest('hex')}`;
+        roomName = `room-${hash.update(`${user}-${peer.user}`).digest('hex')}`;
         console.log('\n');
         console.log('room created:', roomName);
 
         socket.join(roomName);
         peer.socket.join(roomName);
         io.in(roomName).emit('chat start');
-
-        return peer;
     }
 }
 
 io.on('connection', (socket) => {
-    socket.partner = null;
-
     socket.emit('connection');
     queue.print();
 
     socket.on('find partner', (user) => {
         pushToStack(socket, user);
         socket.emit('searching');
-        socket.partner = findChatPartner(socket, user);
+
+        findChatPartner(socket, user);
     });
 
     socket.on('new message', function (info) {
         const { user, msg } = info;
 
-        io.to(socket.id).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
+        io.to(roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
     socket.on('typing', function () {
-        socket.broadcast.to(socket.partner).emit('typing');
+        io.to(roomName).emit('typing');
     });
 
     socket.on('stop typing', () => {
-        socket.broadcast.to(socket.partner).emit('stop typing');
+        io.to(roomName).emit('stop typing');
     });
 
     socket.on('disconnect', () => {
-        if (socket.partner != null) {
-            socket.broadcast.to(socket.partner).emit('typing', false);
-            socket.broadcast
-                .to(socket.partner)
-                .emit('disconnecting now', 'Your Partner has disconnected . Refresh page to chat again');
-        }
+        io.to(roomName).emit('stop typing');
+        io.to(roomName).emit('disconnecting now', 'Your Partner has disconnected . Refresh page to chat again');
 
         removeFromStack(socket.id);
         console.log('user disconnected');
