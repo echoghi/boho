@@ -38,13 +38,19 @@ export default function Chat({ isVideoChat = false }) {
 
     // save user to the chat queue
     useEffect(async () => {
-        const info = await fetch('/ipinfo')
+        const ip = await fetch('https://api.ipify.org/?format=json')
             .then((res) => res.json())
             .catch((err) => err);
+        console.log(ip);
+        if (ip.ip) {
+            const info = await fetch('/ipinfo', { method: 'POST', body: JSON.stringify({ ip: ip.ip }) })
+                .then((res) => res.json())
+                .catch((err) => err);
 
-        setUser(info.body.user);
+            setUser(info.body.user);
 
-        socket.emit('find partner', info.body.user);
+            socket.emit('find partner', info.body.user);
+        }
     }, []);
 
     useEffect(() => {

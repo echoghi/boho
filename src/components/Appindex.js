@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppState } from '../context/appContext';
 import Chat from './Chat';
 import Header from './Header';

@@ -13,11 +13,12 @@ app.get('/count', async (req, res) => {
     res.send({ statusCode: 200, count, socketIDs });
 });
 
-app.get('/ipinfo', (req, res) => {
-    const ip = req.ip;
+app.post('/ipinfo', (req, res) => {
+    console.log(req.body);
+    const ip = req.body.ip;
+    console.log(ip, user);
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip).digest('hex')}`;
-    console.log(ip);
     res.send({ statusCode: 200, body: { user } });
 });
 
@@ -112,7 +113,6 @@ io.on('connection', (socket) => {
 
         removeFromStack(socket.id);
         roomName = '';
-        // console.log('user disconnected');
     });
 });
 
