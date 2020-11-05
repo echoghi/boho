@@ -17,10 +17,10 @@ app.get('/ipinfo', async (req, res) => {
     const ip = await fetch('https://api.ipify.org/?format=json')
         .then((res) => res.json())
         .catch((err) => err);
-
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip.ip).digest('hex')}`;
 
+    console.log(ip.ip, user);
     res.send({ statusCode: 200, body: { user } });
 });
 
@@ -88,7 +88,6 @@ function findChatPartner(socket, user) {
 
 io.on('connection', (socket) => {
     socket.emit('connection');
-    queue.print();
 
     socket.on('find partner', (user) => {
         pushToStack(socket, user);
