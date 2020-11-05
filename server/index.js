@@ -6,6 +6,8 @@ const io = require('socket.io')(server);
 const fetch = require('node-fetch');
 const Stack = require('./stack');
 
+app.set('trust proxy', true);
+
 app.get('/count', async (req, res) => {
     const socketIDs = Object.keys(io.sockets.connected);
     const count = socketIDs.length;
@@ -14,7 +16,7 @@ app.get('/count', async (req, res) => {
 });
 
 app.get('/ipinfo', (req, res) => {
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const ip = req.ip;
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip).digest('hex')}`;
     console.log(ip, user);
