@@ -14,7 +14,7 @@ app.get('/count', async (req, res) => {
 });
 
 app.get('/ipinfo', (req, res) => {
-    const ip = req.connection.remoteAddress;
+    const ip = req.ip;
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip).digest('hex')}`;
     console.log(ip);
