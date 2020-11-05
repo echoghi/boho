@@ -6,7 +6,7 @@ const io = require('socket.io')(server);
 const fetch = require('node-fetch');
 const Stack = require('./stack');
 
-app.set('trust proxy', 'loopback');
+app.set('trust proxy', '127.0.0.1');
 
 app.get('/count', async (req, res) => {
     const socketIDs = Object.keys(io.sockets.connected);
