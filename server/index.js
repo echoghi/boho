@@ -14,11 +14,10 @@ app.get('/count', async (req, res) => {
 });
 
 app.post('/ipinfo', (req, res) => {
-    console.log(req.body);
-    const ip = req.body.ip;
-    console.log(ip, user);
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip).digest('hex')}`;
+    console.log(ip, user);
     res.send({ statusCode: 200, body: { user } });
 });
 
