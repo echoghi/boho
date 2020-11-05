@@ -41,7 +41,6 @@ function pushToStack(socket, user) {
 
 function removeFromStack(id) {
     queue.remove(id);
-    queue.print();
 }
 
 let searchCount = 0;
@@ -113,7 +112,7 @@ io.on('connection', (socket) => {
 
         removeFromStack(socket.id);
         roomName = '';
-        console.log('user disconnected');
+        // console.log('user disconnected');
     });
 });
 
