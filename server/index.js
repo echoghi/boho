@@ -21,9 +21,6 @@ app.get('/ipinfo', async (req, res) => {
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip.ip).digest('hex')}`;
 
-    // save user to db
-    // saveUserInfo(user);
-
     res.send({ statusCode: 200, body: { user } });
 });
 
@@ -58,9 +55,9 @@ function delaySearch(socket, user) {
         searchCount++;
 
         if (searchCount >= 10) {
-            return io.to(socket.id).emit('no partners');
+            return socket.emit('no partners');
         } else if (searchCount > 5) {
-            io.to(socket.id).emit('still searching');
+            socket.emit('still searching');
         }
 
         findChatPartner(socket, user);
@@ -107,11 +104,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('typing', function () {
-        io.to(roomName).emit('typing');
+        if (roomName) io.to(roomName).emit('typing');
     });
 
     socket.on('stop typing', () => {
-        io.to(roomName).emit('stop typing');
+        if (roomName) io.to(roomName).emit('stop typing');
     });
 
     socket.on('disconnect', () => {
@@ -119,6 +116,7 @@ io.on('connection', (socket) => {
         io.to(roomName).emit('disconnecting now', 'Your Partner has disconnected . Refresh page to chat again');
 
         removeFromStack(socket.id);
+        roomName = '';
         console.log('user disconnected');
     });
 });
