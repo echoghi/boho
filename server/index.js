@@ -19,7 +19,7 @@ app.get('/ipinfo', (req, res) => {
     const ip = req.ip;
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(`${Math.random()}`).digest('hex')}`;
-    console.log(ip, user);
+
     res.send({ statusCode: 200, body: { user } });
 });
 
@@ -42,6 +42,7 @@ function pushToStack(socket, user) {
 }
 
 function removeFromStack(id) {
+    console.log('\n');
     console.log(`removing ${id}`);
     queue.remove(id);
 }
