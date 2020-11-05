@@ -94,7 +94,7 @@ io.on('connection', (socket) => {
     socket.partner = null;
 
     socket.emit('connection');
-    console.log('A user connected');
+    queue.print();
 
     socket.on('find partner', (user) => {
         pushToStack(socket, user);

@@ -122,7 +122,7 @@ export default function Chat({ isVideoChat = false }) {
     }
 
     function findNewPartner() {
-        socket.emit('find partner');
+        socket.emit('find partner', user);
     }
 
     return (
