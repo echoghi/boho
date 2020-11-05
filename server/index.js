@@ -18,8 +18,8 @@ app.get('/count', async (req, res) => {
 app.get('/ipinfo', (req, res) => {
     const ip = req.ip;
     const hash = crypto.createHash('sha256');
-    const user = `0x${hash.update(ip).digest('hex')}`;
-    console.log(ip, user);
+    const user = `0x${hash.digest('hex')}`;
+    console.log(ip);
     res.send({ statusCode: 200, body: { user } });
 });
 
