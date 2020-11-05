@@ -53,9 +53,9 @@ function delaySearch(socket, user) {
         searchCount++;
 
         if (searchCount >= 10) {
-            return socket.emit('no partners');
+            return io.to(socket.id).emit('no partners');
         } else if (searchCount > 5) {
-            socket.emit('still searching');
+            io.to(socket.id).emit('still searching');
         }
 
         findChatPartner(socket, user);
@@ -89,7 +89,7 @@ io.on('connection', (socket) => {
 
     socket.on('find partner', (user) => {
         pushToStack(socket, user);
-        socket.emit('searching');
+        io.to(socket.id).emit('searching');
 
         findChatPartner(socket, user);
     });
@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         io.to(roomName).emit('stop typing');
-        io.to(roomName).emit('disconnecting now', 'Your Partner has disconnected . Refresh page to chat again');
+        io.to(roomName).emit('disconnecting now');
 
         removeFromStack(socket.id);
         roomName = '';
