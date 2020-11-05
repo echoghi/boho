@@ -13,10 +13,8 @@ app.get('/count', async (req, res) => {
     res.send({ statusCode: 200, count, socketIDs });
 });
 
-app.get('/ipinfo', async (req, res) => {
-    const ip = await fetch('https://api.ipify.org/?format=json')
-        .then((res) => res.json())
-        .catch((err) => err);
+app.get('/ipinfo', (req, res) => {
+    const ip = req.connection.remoteAddress;
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(ip.ip).digest('hex')}`;
 
