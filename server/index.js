@@ -18,7 +18,7 @@ app.get('/count', async (req, res) => {
 app.get('/ipinfo', (req, res) => {
     const ip = req.ip;
     const hash = crypto.createHash('sha256');
-    const user = `0x${hash.update(`${Math.random()}`).digest('hex')}`;
+    const user = `0x${hash.update(ip).digest('hex')}`;
     console.log(ip, req.connection.remoteAddress);
     res.send({ statusCode: 200, body: { user } });
 });
@@ -53,6 +53,7 @@ function delaySearch(socket, user) {
         searchCount++;
 
         if (searchCount >= 10) {
+            searchCount = 0;
             return io.to(socket.id).emit('no partners');
         } else if (searchCount > 5) {
             io.to(socket.id).emit('still searching');
