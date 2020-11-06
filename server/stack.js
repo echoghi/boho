@@ -27,6 +27,7 @@ module.exports = function Stack() {
 
     this.remove = (id) => {
         this.collection = this.collection.filter((user) => user.socket.id !== id);
+        if (!this.isEmpty()) console.log('queue emptied');
     };
 
     this.next = () => {
@@ -39,5 +40,6 @@ module.exports = function Stack() {
 
     this.clear = () => {
         this.collection = [];
+        console.log('queue emptied');
     };
 };
