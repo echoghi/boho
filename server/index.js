@@ -18,7 +18,7 @@ app.get('/count', async (req, res) => {
 app.get('/ipinfo', (req, res) => {
     const ip = req.ip;
     const hash = crypto.createHash('sha256');
-    const user = `0x${hash.update(ip).digest('hex')}`;
+    const user = `0x${hash.update(`${Math.random()}`).digest('hex')}`;
     console.log(ip, req.connection.remoteAddress);
     res.send({ statusCode: 200, body: { user } });
 });
@@ -79,6 +79,7 @@ function findChatPartner(socket, user) {
         console.log('\n');
         console.log('room created:', roomName);
 
+        searchCount = 0;
         socket.join(roomName);
         peer.socket.join(roomName);
         io.in(roomName).emit('chat start');
