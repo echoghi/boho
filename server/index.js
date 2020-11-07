@@ -69,12 +69,14 @@ function findChatPartner(socket, user) {
     if (queue.isEmpty()) {
         return delaySearch(socket, user);
     } else {
-        const peer = queue.next();
-        console.log('socketIsSameUser', user === peer.user);
+        const nextUp = queue.peek();
+        console.log('socketIsSameUser', user === nextUp.user);
         // if the sockets are the same IP, keep searching
-        if (peer.user === user) {
+        if (nextUp.user === user) {
             return delaySearch(socket, user);
         }
+
+        const peer = queue.next();
 
         const hash = crypto.createHash('sha256');
         roomName = `room-${hash.update(`${user}-${peer.user}`).digest('hex')}`;

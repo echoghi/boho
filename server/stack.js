@@ -34,6 +34,10 @@ module.exports = function Stack() {
         return this.collection.shift();
     };
 
+    this.peek = () => {
+        return this.collection[this.collection.length - 1];
+    };
+
     this.isEmpty = () => {
         return !this.collection.length;
     };
