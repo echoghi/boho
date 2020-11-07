@@ -81,7 +81,7 @@ export default function Chat({ isVideoChat = false }) {
         });
 
         // show the typing message if the one typing is not the user
-        socket.on('typing', () => setTyping(true));
+        socket.on('typing', (userId) => setTyping(user === userId));
 
         return () => {
             socket.off('receive message');

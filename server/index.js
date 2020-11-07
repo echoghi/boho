@@ -103,11 +103,11 @@ io.on('connection', (socket) => {
     socket.on('new message', (info) => {
         const { user, msg } = info;
 
-        io.to(roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
+        io.in(roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
-    socket.on('typing', () => {
-        if (roomName) io.to(roomName).emit('typing');
+    socket.on('typing', (user) => {
+        if (roomName && user) io.to(roomName).emit('typing', user);
     });
 
     socket.on('stop typing', () => {
