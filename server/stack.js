@@ -18,7 +18,7 @@ module.exports = function Stack() {
     this.find = (expression) => this.collection.find(expression);
 
     this.push = (item) => {
-        const existingSocket = this.collection.find((user) => user.socket.id === item.socket.id);
+        const existingSocket = this.find((user) => user.socket.id === item.socket.id);
 
         if (!existingSocket) {
             this.collection.push(item);
@@ -27,7 +27,7 @@ module.exports = function Stack() {
 
     this.remove = (id) => {
         this.collection = this.collection.filter((user) => user.socket.id !== id);
-        if (!this.isEmpty()) console.log('queue emptied');
+        if (this.isEmpty()) console.log('queue emptied');
     };
 
     this.next = () => {

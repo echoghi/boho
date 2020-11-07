@@ -72,7 +72,6 @@ export default function Chat({ isVideoChat = false }) {
         });
 
         socket.on('chat start', (roomName) => {
-            console.log(roomName);
             setSystemMessage("You're now chatting with a random stranger.");
             setPartnerConnection(true);
             textRef.current.focus();

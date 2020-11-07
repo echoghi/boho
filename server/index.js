@@ -95,7 +95,6 @@ function findChatPartner(socket, user) {
         peer.roomName = roomName;
         socket.searchCount = 0;
 
-        // TODO: socket.partner not joining room
         socket.join(roomName);
         socket.partner.join(roomName);
 
@@ -110,10 +109,10 @@ io.on('connection', (socket) => {
     socket.emit('connection');
 
     socket.on('find partner', (user) => {
-        pushToStack(socket, user);
         io.to(socket.id).emit('searching');
 
         findChatPartner(socket, user);
+        pushToStack(socket, user);
     });
 
     socket.on('new message', (info) => {
