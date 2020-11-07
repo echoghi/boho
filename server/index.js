@@ -86,9 +86,8 @@ function findChatPartner(socket, user) {
         searchCount = 0;
         socket.join(roomName);
         peer.socket.join(roomName);
-        socket.emit('chat start', roomName);
-        peer.socket.emit('chat start', roomName);
-        io.in(roomName).emit('chat start', roomName);
+
+        io.to(roomName).emit('chat start', roomName);
     }
 }
 
@@ -105,7 +104,7 @@ io.on('connection', (socket) => {
     socket.on('new message', (info) => {
         const { user, msg } = info;
 
-        io.in(roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
+        io.to(roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
     socket.on('typing', (user) => {
