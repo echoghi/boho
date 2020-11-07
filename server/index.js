@@ -39,6 +39,7 @@ if (process.env.NODE_ENV === 'production') {
 const queue = new Stack();
 
 function pushToStack(socket, user) {
+    socket.searchCount = 0;
     queue.push({ socket: socket, user });
     queue.print();
 }
@@ -47,17 +48,14 @@ function removeFromStack(id) {
     queue.remove(id);
 }
 
-let searchCount = 0;
-let roomName = '';
-
 function delaySearch(socket, user) {
     setTimeout(() => {
-        searchCount++;
+        socket.searchCount++;
 
-        if (searchCount >= 10) {
-            searchCount = 0;
+        if (socket.searchCount >= 10) {
+            socket.searchCount = 0;
             return io.to(socket.id).emit('no partners');
-        } else if (searchCount > 5) {
+        } else if (socket.searchCount > 5) {
             io.to(socket.id).emit('still searching');
         }
 
@@ -77,16 +75,21 @@ function findChatPartner(socket, user) {
         }
 
         const peer = queue.next();
+        socket.partner = peer.socket;
 
         const hash = crypto.createHash('sha256');
-        roomName = `room-${hash.update(`${user}-${peer.user}`).digest('hex')}`;
+        const roomName = `room-${hash.update(`${user}-${peer.user}`).digest('hex')}`;
         console.log('\n');
         console.log('room created:', roomName);
 
-        searchCount = 0;
-        socket.join(roomName);
-        peer.socket.join(roomName);
+        socket.roomName = roomName;
+        socket.searchCount = 0;
 
+        socket.join(roomName);
+        socket.partner.join(roomName);
+
+        io.to(socket.id).emit('chat start', roomName);
+        io.to(socket.partner.id).emit('chat start', roomName);
         io.to(roomName).emit('chat start', roomName);
     }
 }
@@ -104,23 +107,25 @@ io.on('connection', (socket) => {
     socket.on('new message', (info) => {
         const { user, msg } = info;
 
-        io.to(roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
+        io.to(socket.roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
     socket.on('typing', (user) => {
-        if (roomName && user) io.to(roomName).emit('typing', user);
+        if (socket.roomName) io.to(socket.roomName).emit('typing', user);
     });
 
     socket.on('stop typing', () => {
-        if (roomName) io.to(roomName).emit('stop typing');
+        if (socket.roomName) io.to(socket.roomName).emit('stop typing');
     });
 
     socket.on('disconnect', () => {
-        io.to(roomName).emit('stop typing');
-        io.to(roomName).emit('disconnecting now');
+        if (socket.partner) {
+            io.to(socket.partner.id).emit('stop typing');
+            io.to(socket.partner.id).emit('disconnecting now');
+        }
 
         removeFromStack(socket.id);
-        roomName = '';
+        socket.roomName = '';
     });
 });
 
