@@ -14,6 +14,7 @@ export default function Chat({ isVideoChat = false }) {
     const [user, setUser] = useState('');
     const [isConnected, setConnection] = useState(false);
     const [isConnectedToPartner, setPartnerConnection] = useState(false);
+    const [partnerDisconnected, setPartnerDisconnected] = useState(false);
     const [systemMessage, setSystemMessage] = useState('Connecting to server...');
     const [message, setMessage] = useState('');
     const [isTyping, setTyping] = useState(false);
@@ -63,6 +64,7 @@ export default function Chat({ isVideoChat = false }) {
 
         socket.on('searching', () => {
             setSystemMessage('Looking for someone you can chat with...');
+            setPartnerDisconnected(false);
         });
 
         socket.on('still searching', () => {
@@ -70,7 +72,7 @@ export default function Chat({ isVideoChat = false }) {
         });
 
         socket.on('chat start', (roomName) => {
-            console.log(`joined ${roomName}`);
+            console.log(roomName);
             setSystemMessage("You're now chatting with a random stranger.");
             setPartnerConnection(true);
             textRef.current.focus();
@@ -83,6 +85,12 @@ export default function Chat({ isVideoChat = false }) {
 
         // show the typing message if the one typing is not the user
         socket.on('typing', (userId) => setTyping(user !== userId));
+        socket.on('stop typing', () => setTyping(false));
+
+        socket.on('disconnecting now', () => {
+            setPartnerDisconnected(true);
+            setPartnerConnection(false);
+        });
 
         return () => {
             socket.off('receive message');
@@ -92,6 +100,7 @@ export default function Chat({ isVideoChat = false }) {
             socket.off('still searching');
             socket.off('chat start');
             socket.off('connection');
+            socket.off('disconnecting now');
         };
     });
 
@@ -126,6 +135,10 @@ export default function Chat({ isVideoChat = false }) {
     }
 
     function findNewPartner() {
+        setPartnerDisconnected(false);
+        setMessages((draft) => {
+            draft.splice(0, draft.length);
+        });
         socket.emit('find partner', user);
     }
 
@@ -147,6 +160,11 @@ export default function Chat({ isVideoChat = false }) {
                     ))}
 
                     {isTyping && <p>Stranger is typing...</p>}
+                    {partnerDisconnected && (
+                        <div className="message__container">
+                            <p className="message message__system">Your partner disconnected.</p>
+                        </div>
+                    )}
                 </div>
                 <form className="text__chat--controls" onSubmit={formHandler}>
                     <button type="button" onClick={findNewPartner}>
@@ -157,7 +175,7 @@ export default function Chat({ isVideoChat = false }) {
                         onChange={inputHandler}
                         value={message}
                         onKeyDown={typingHandler}
-                        // disabled={!isConnectedToPartner || !isConnected}
+                        disabled={!isConnectedToPartner || !isConnected}
                     />
                     <button type="submit" disabled={!message || !isConnectedToPartner || !isConnected}>
                         Send

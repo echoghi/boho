@@ -52,6 +52,11 @@ function delaySearch(socket, user) {
     setTimeout(() => {
         socket.searchCount++;
 
+        if (socket.partner) {
+            socket.searchCount = 0;
+            return io.to(socket.roomName).emit('chat start', socket.roomName);
+        }
+
         if (socket.searchCount >= 10) {
             socket.searchCount = 0;
             return io.to(socket.id).emit('no partners');
@@ -67,6 +72,7 @@ function findChatPartner(socket, user) {
     if (queue.isEmpty()) {
         return delaySearch(socket, user);
     } else {
+        // look at the next partner without mutating the queue
         const nextUp = queue.peek();
 
         // if the sockets are the same IP, keep searching
@@ -74,23 +80,29 @@ function findChatPartner(socket, user) {
             return delaySearch(socket, user);
         }
 
+        // get the peer socket and remove both both from queue
         const peer = queue.next();
-        socket.partner = peer.socket;
+        queue.remove(socket.id);
 
+        socket.partner = peer.socket;
+        peer.partner = socket;
+
+        // create room name
         const hash = crypto.createHash('sha256');
         const roomName = `room-${hash.update(`${user}-${peer.user}`).digest('hex')}`;
-        console.log('\n');
-        console.log('room created:', roomName);
 
         socket.roomName = roomName;
+        peer.roomName = roomName;
         socket.searchCount = 0;
 
+        // TODO: socket.partner not joining room
         socket.join(roomName);
         socket.partner.join(roomName);
+
+        console.log('\n');
         console.log('MATCH MADE!!!');
-        io.to(socket.id).emit('chat start', roomName);
-        io.to(socket.partner.id).emit('chat start', roomName);
-        io.to(roomName).emit('chat start', roomName);
+
+        io.to(socket.roomName).emit('chat start', socket.roomName);
     }
 }
 
