@@ -68,7 +68,8 @@ export default function Chat({ isVideoChat = false }) {
             setSystemMessage('Still looking for a partner...');
         });
 
-        socket.on('chat start', () => {
+        socket.on('chat start', (roomName) => {
+            console.log(`joined ${roomName}`);
             setSystemMessage("You're now chatting with a random stranger.");
             setPartnerConnection(true);
             textRef.current.focus();
@@ -153,7 +154,7 @@ export default function Chat({ isVideoChat = false }) {
                         onChange={inputHandler}
                         value={message}
                         onKeyDown={typingHandler}
-                        disabled={!message || !isConnectedToPartner || !isConnected}
+                        disabled={!isConnectedToPartner || !isConnected}
                     />
                     <button type="submit" disabled={!message || !isConnectedToPartner || !isConnected}>
                         Send

@@ -86,7 +86,7 @@ function findChatPartner(socket, user) {
         searchCount = 0;
         socket.join(roomName);
         peer.socket.join(roomName);
-        io.in(roomName).emit('chat start');
+        io.in(roomName).emit('chat start', roomName);
     }
 }
 
