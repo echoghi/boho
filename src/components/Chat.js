@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useImmer } from 'use-immer';
 import useSocket from '../hooks/useSocket';
+import { throttle } from '../utils';
 
 import Message from './Message';
 
@@ -81,7 +82,7 @@ export default function Chat({ isVideoChat = false }) {
         });
 
         // show the typing message if the one typing is not the user
-        socket.on('typing', (userId) => setTyping(user === userId));
+        socket.on('typing', (userId) => setTyping(user !== userId));
 
         return () => {
             socket.off('receive message');
@@ -116,6 +117,8 @@ export default function Chat({ isVideoChat = false }) {
 
             socket.emit('stop typing', user);
         }
+
+        throttle(() => socket.emit('stop typing', user), 1000);
     }
 
     function inputHandler(e) {
@@ -154,7 +157,7 @@ export default function Chat({ isVideoChat = false }) {
                         onChange={inputHandler}
                         value={message}
                         onKeyDown={typingHandler}
-                        disabled={!isConnectedToPartner || !isConnected}
+                        // disabled={!isConnectedToPartner || !isConnected}
                     />
                     <button type="submit" disabled={!message || !isConnectedToPartner || !isConnected}>
                         Send

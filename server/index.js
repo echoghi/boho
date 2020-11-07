@@ -68,7 +68,7 @@ function findChatPartner(socket, user) {
         return delaySearch(socket, user);
     } else {
         const nextUp = queue.peek();
-        console.log('socketIsSameUser', user === nextUp.user);
+
         // if the sockets are the same IP, keep searching
         if (nextUp.user === user) {
             return delaySearch(socket, user);
@@ -87,7 +87,7 @@ function findChatPartner(socket, user) {
 
         socket.join(roomName);
         socket.partner.join(roomName);
-
+        console.log('MATCH MADE!!!');
         io.to(socket.id).emit('chat start', roomName);
         io.to(socket.partner.id).emit('chat start', roomName);
         io.to(roomName).emit('chat start', roomName);
