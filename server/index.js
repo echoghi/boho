@@ -4,6 +4,7 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const fetch = require('node-fetch');
+const faker = require('faker');
 const Stack = require('./stack');
 
 app.set('trust proxy', true);
@@ -17,9 +18,10 @@ app.get('/count', async (req, res) => {
 
 app.get('/ipinfo', (req, res) => {
     const ip = req.ip;
+    const fakeIp = faker.internet.ip();
     const hash = crypto.createHash('sha256');
-    const user = `0x${hash.update(`${Math.random()}`).digest('hex')}`;
-    console.log(ip, req.connection.remoteAddress);
+    const user = `0x${hash.update(fakeIp).digest('hex')}`;
+    console.log(ip, fakeIp);
     res.send({ statusCode: 200, body: { user } });
 });
 
@@ -96,13 +98,13 @@ io.on('connection', (socket) => {
         findChatPartner(socket, user);
     });
 
-    socket.on('new message', function (info) {
+    socket.on('new message', (info) => {
         const { user, msg } = info;
 
         io.to(roomName).emit('receive message', { user, msg, key: crypto.randomBytes(16).toString('hex') });
     });
 
-    socket.on('typing', function () {
+    socket.on('typing', () => {
         if (roomName) io.to(roomName).emit('typing');
     });
 
