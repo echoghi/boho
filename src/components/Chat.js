@@ -1,24 +1,89 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useImmer } from 'use-immer';
+import { useImmerReducer } from 'use-immer';
 import useSocket from '../hooks/useSocket';
 import { throttle } from '../utils';
 
 import Message from './Message';
 
+const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'wss://www.bohochat.com';
+
+const chatState = {
+    user: null,
+    serverConnection: false,
+    partnerConnection: false,
+    disconnectedMessage: '',
+    buttonText: 'New',
+    systemMessage: 'Connecting to server...',
+    messages: []
+};
+
+const chatReducer = (draft, action) => {
+    switch (action.type) {
+        case 'SET_MESSAGES':
+            draft.messages.push(action.message);
+            return;
+
+        case 'CONNECTION':
+            draft.serverConnection = true;
+            draft.systemMessage = 'Looking for someone you can chat with...';
+            return;
+
+        case 'SEARCHING':
+            draft.partnerConnection = false;
+            draft.systemMessage = 'Looking for someone you can chat with...';
+            draft.disconnectedMessage = '';
+            draft.messages = [];
+            return;
+
+        case 'STILL_SEARCHING':
+            draft.partnerConnection = false;
+            draft.systemMessage = 'Still looking for a partner...';
+            return;
+
+        case 'CHAT_START':
+            draft.partnerConnection = true;
+            draft.buttonText = 'Stop';
+            draft.systemMessage = "You're now chatting with a random stranger.";
+            draft.disconnectedMessage = '';
+            return;
+
+        case 'CONFIRM_EXIT':
+            draft.confirmExit = true;
+            draft.buttonText = 'Really?';
+
+            return;
+
+        case 'NO_PARTNERS':
+            draft.partnerConnection = false;
+            draft.systemMessage = "Couldn't find anyone available to chat with :(";
+            return;
+
+        case 'DISCONNECTING':
+            draft.partnerConnection = false;
+            draft.buttonText = 'New';
+            draft.confirmExit = false;
+            draft.disconnectedMessage = action.message;
+            draft.messages = [];
+            return;
+
+        case 'SET_USER':
+            draft.user = action.user;
+            return;
+
+        default:
+            return draft;
+    }
+};
+
 export default function Chat({ isVideoChat = false }) {
-    const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'wss://www.bohochat.com';
+    const [state, dispatch] = useImmerReducer(chatReducer, chatState);
     const [socket] = useSocket(socketURL);
+
+    const [message, setMessage] = useState('');
+    const [isTyping, setTyping] = useState(false);
 
     const videoRef = useRef();
     const textRef = useRef();
-    const [user, setUser] = useState('');
-    const [isConnected, setConnection] = useState(false);
-    const [isConnectedToPartner, setPartnerConnection] = useState(false);
-    const [partnerDisconnected, setPartnerDisconnected] = useState(false);
-    const [systemMessage, setSystemMessage] = useState('Connecting to server...');
-    const [message, setMessage] = useState('');
-    const [isTyping, setTyping] = useState(false);
-    const [messages, setMessages] = useImmer([]);
 
     // request user video feed
     useEffect(async () => {
@@ -44,51 +109,33 @@ export default function Chat({ isVideoChat = false }) {
             .then((res) => res.json())
             .catch((err) => err);
 
-        setUser(info.body.user);
+        const { user } = info.body;
 
-        socket.emit('find partner', info.body.user);
+        dispatch({ type: 'SET_USER', user });
+
+        socket.emit('find partner', user);
     }, []);
 
     useEffect(() => {
         // add updated messages
-        socket.on('receive message', (message) =>
-            setMessages((draft) => {
-                draft.push(message);
-            })
-        );
-
-        socket.on('connection', () => {
-            setSystemMessage('Looking for someone you can chat with...');
-            setConnection(true);
-        });
-
-        socket.on('searching', () => {
-            setSystemMessage('Looking for someone you can chat with...');
-            setPartnerDisconnected(false);
-        });
-
-        socket.on('still searching', () => {
-            setSystemMessage('Still looking for a partner...');
-        });
+        socket.on('receive message', (message) => dispatch({ type: 'SET_MESSAGES', message }));
+        socket.on('connection', () => dispatch({ type: 'CONNECTION' }));
+        socket.on('searching', () => dispatch({ type: 'SEARCHING' }));
+        socket.on('still searching', () => dispatch({ type: 'STILL_SEARCHING' }));
+        socket.on('no partners', () => dispatch({ type: 'NO_PARTNERS' }));
+        // show the typing message if the one typing is not the user
+        socket.on('typing', (userId) => setTyping(state.user !== userId));
+        socket.on('stop typing', () => setTyping(false));
 
         socket.on('chat start', (roomName) => {
-            setSystemMessage("You're now chatting with a random stranger.");
-            setPartnerConnection(true);
+            dispatch({ type: 'CHAT_START' });
+
             textRef.current.focus();
         });
 
-        socket.on('no partners', () => {
-            setSystemMessage("Couldn't find anyone available to chat with :(");
-            setPartnerConnection(false);
-        });
-
-        // show the typing message if the one typing is not the user
-        socket.on('typing', (userId) => setTyping(user !== userId));
-        socket.on('stop typing', () => setTyping(false));
-
-        socket.on('disconnecting now', () => {
-            setPartnerDisconnected(true);
-            setPartnerConnection(false);
+        socket.on('disconnecting now', (userName) => {
+            const message = userName === state.user ? 'You disconnected.' : 'Your partner disconnected.';
+            dispatch({ type: 'DISCONNECTING', message });
         });
 
         return () => {
@@ -104,7 +151,7 @@ export default function Chat({ isVideoChat = false }) {
     });
 
     function sendMessage(msg) {
-        socket.emit('new message', { user, msg });
+        socket.emit('new message', { user: state.user, msg });
     }
 
     function formHandler(e) {
@@ -115,7 +162,7 @@ export default function Chat({ isVideoChat = false }) {
     }
 
     function typingHandler(e) {
-        socket.emit('typing', user);
+        socket.emit('typing', state.user);
 
         if (e.which === 13) {
             e.preventDefault();
@@ -123,10 +170,10 @@ export default function Chat({ isVideoChat = false }) {
             sendMessage(message);
             setMessage('');
 
-            socket.emit('stop typing', user);
+            socket.emit('stop typing', state.user);
         }
 
-        throttle(() => socket.emit('stop typing', user), 1000);
+        throttle(() => socket.emit('stop typing', state.user), 1000);
     }
 
     function inputHandler(e) {
@@ -134,12 +181,31 @@ export default function Chat({ isVideoChat = false }) {
     }
 
     function findNewPartner() {
-        setPartnerDisconnected(false);
-        setMessages((draft) => {
-            draft.splice(0, draft.length);
-        });
-        socket.emit('find partner', user);
+        dispatch({ type: 'FIND_PARTNER' });
+
+        socket.emit('find partner', state.user);
     }
+
+    function confirmExit() {
+        dispatch({ type: 'CONFIRM_EXIT' });
+    }
+
+    function stopChat() {
+        dispatch({ type: 'DISCONNECTING' });
+        socket.emit('disconnecting now');
+    }
+
+    const buttonHandler = () => {
+        if (state.partnerConnection) {
+            if (state.confirmExit) {
+                return stopChat;
+            } else {
+                return confirmExit;
+            }
+        } else {
+            return findNewPartner;
+        }
+    };
 
     return (
         <div className={`chat__wrapper ${isVideoChat ? 'video' : ''}`}>
@@ -152,31 +218,32 @@ export default function Chat({ isVideoChat = false }) {
             <div className="text__chat--container">
                 <div className="text__chat">
                     <div className="message__container">
-                        <p className="message message__system">{systemMessage}</p>
+                        <p className="message message__system">{state.systemMessage}</p>
                     </div>
-                    {messages.map((message) => (
-                        <Message {...message} key={message.key} isUser={user === message.user} />
+                    {state.messages.map((message) => (
+                        <Message {...message} key={message.key} isUser={state.user === message.user} />
                     ))}
 
                     {isTyping && <p>Stranger is typing...</p>}
-                    {partnerDisconnected && (
+                    {!!state.disconnectedMessage && (
                         <div className="message__container">
-                            <p className="message message__system">Your partner disconnected.</p>
+                            <p className="message message__system">{state.disconnectedMessage}</p>
                         </div>
                     )}
                 </div>
                 <form className="text__chat--controls" onSubmit={formHandler}>
-                    <button type="button" onClick={findNewPartner}>
-                        New
+                    <button type="button" onClick={buttonHandler()}>
+                        {state.buttonText}
                     </button>
+
                     <textarea
                         ref={textRef}
                         onChange={inputHandler}
                         value={message}
                         onKeyDown={typingHandler}
-                        disabled={!isConnectedToPartner || !isConnected}
+                        disabled={!state.partnerConnection || !state.serverConnection}
                     />
-                    <button type="submit" disabled={!message || !isConnectedToPartner || !isConnected}>
+                    <button type="submit" disabled={!message || !state.partnerConnection || !state.serverConnection}>
                         Send
                     </button>
                 </form>

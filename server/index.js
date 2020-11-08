@@ -40,6 +40,7 @@ const queue = new Stack();
 
 function pushToStack(socket, user) {
     socket.searchCount = 0;
+    socket.user = user;
     queue.push({ socket: socket, user });
     queue.print();
 }
@@ -129,14 +130,26 @@ io.on('connection', (socket) => {
         if (socket.roomName) io.to(socket.roomName).emit('stop typing');
     });
 
+    socket.on('disconnecting now', () => {
+        if (socket.partner) {
+            io.to(socket.roomName).emit('disconnecting now', socket.user);
+            socket.leave(socket.roomName);
+            socket.partner.leave(socket.roomName);
+
+            socket.partner = null;
+            socket.roomName = '';
+        }
+    });
+
     socket.on('disconnect', () => {
         if (socket.partner) {
-            io.to(socket.partner.id).emit('stop typing');
-            io.to(socket.partner.id).emit('disconnecting now');
+            io.to(socket.roomName).emit('disconnecting now', socket.user);
+            socket.partner = null;
+            socket.user = null;
+            socket.roomName = '';
         }
 
         removeFromStack(socket.id);
-        socket.roomName = '';
     });
 });
 
