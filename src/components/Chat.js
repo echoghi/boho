@@ -11,6 +11,7 @@ const chatState = {
     user: null,
     serverConnection: false,
     partnerConnection: false,
+    isPartnerTyping: false,
     disconnectedMessage: '',
     buttonText: 'New',
     systemMessage: 'Connecting to server...',
@@ -50,7 +51,6 @@ const chatReducer = (draft, action) => {
         case 'CONFIRM_EXIT':
             draft.confirmExit = true;
             draft.buttonText = 'Really?';
-
             return;
 
         case 'NO_PARTNERS':
@@ -63,11 +63,14 @@ const chatReducer = (draft, action) => {
             draft.buttonText = 'New';
             draft.confirmExit = false;
             draft.disconnectedMessage = action.message;
-            draft.messages = [];
             return;
 
         case 'SET_USER':
             draft.user = action.user;
+            return;
+
+        case 'SET_TYPING':
+            draft.isPartnerTyping = action.status;
             return;
 
         default:
@@ -80,10 +83,10 @@ export default function Chat({ isVideoChat = false }) {
     const [socket] = useSocket(socketURL);
 
     const [message, setMessage] = useState('');
-    const [isTyping, setTyping] = useState(false);
 
     const videoRef = useRef();
     const textRef = useRef();
+    const chatRef = useRef();
 
     // request user video feed
     useEffect(async () => {
@@ -117,15 +120,20 @@ export default function Chat({ isVideoChat = false }) {
     }, []);
 
     useEffect(() => {
-        // add updated messages
-        socket.on('receive message', (message) => dispatch({ type: 'SET_MESSAGES', message }));
+        // update messages and scroll to bottom
+        socket.on('receive message', (message) => {
+            dispatch({ type: 'SET_MESSAGES', message });
+            console.log(chatRef.current.height, chatRef.current.scrollHeight);
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+        });
+        // trigger state updates
         socket.on('connection', () => dispatch({ type: 'CONNECTION' }));
         socket.on('searching', () => dispatch({ type: 'SEARCHING' }));
         socket.on('still searching', () => dispatch({ type: 'STILL_SEARCHING' }));
         socket.on('no partners', () => dispatch({ type: 'NO_PARTNERS' }));
         // show the typing message if the one typing is not the user
-        socket.on('typing', (userId) => setTyping(state.user !== userId));
-        socket.on('stop typing', () => setTyping(false));
+        socket.on('typing', (userId) => dispatch({ type: 'SET_TYPING', status: state.user !== userId }));
+        socket.on('stop typing', () => dispatch({ type: 'SET_TYPING', status: false }));
 
         socket.on('chat start', (roomName) => {
             dispatch({ type: 'CHAT_START' });
@@ -133,9 +141,12 @@ export default function Chat({ isVideoChat = false }) {
             textRef.current.focus();
         });
 
+        // update system msg and scroll to bottom
         socket.on('disconnecting now', (userName) => {
             const message = userName === state.user ? 'You disconnected.' : 'Your partner disconnected.';
+
             dispatch({ type: 'DISCONNECTING', message });
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
         });
 
         return () => {
@@ -162,7 +173,7 @@ export default function Chat({ isVideoChat = false }) {
     }
 
     function typingHandler(e) {
-        socket.emit('typing', state.user);
+        throttle(socket.emit('typing', state.user), 1000);
 
         if (e.which === 13) {
             e.preventDefault();
@@ -173,7 +184,7 @@ export default function Chat({ isVideoChat = false }) {
             socket.emit('stop typing', state.user);
         }
 
-        throttle(() => socket.emit('stop typing', state.user), 1000);
+        setTimeout(() => socket.emit('stop typing', state.user), 1500);
     }
 
     function inputHandler(e) {
@@ -216,7 +227,7 @@ export default function Chat({ isVideoChat = false }) {
                 </div>
             )}
             <div className="text__chat--container">
-                <div className="text__chat">
+                <div className="text__chat" ref={chatRef}>
                     <div className="message__container">
                         <p className="message message__system">{state.systemMessage}</p>
                     </div>
@@ -224,18 +235,18 @@ export default function Chat({ isVideoChat = false }) {
                         <Message {...message} key={message.key} isUser={state.user === message.user} />
                     ))}
 
-                    {isTyping && <p>Stranger is typing...</p>}
+                    {state.isPartnerTyping && <p>Stranger is typing...</p>}
                     {!!state.disconnectedMessage && (
                         <div className="message__container">
                             <p className="message message__system">{state.disconnectedMessage}</p>
                         </div>
                     )}
                 </div>
+
                 <form className="text__chat--controls" onSubmit={formHandler}>
                     <button type="button" onClick={buttonHandler()}>
                         {state.buttonText}
                     </button>
-
                     <textarea
                         ref={textRef}
                         onChange={inputHandler}

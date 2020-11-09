@@ -1,9 +1,13 @@
 import React from 'react';
 
 export default function Message({ msg, isUser }) {
+    const userName = isUser ? 'You' : 'Stranger';
     return (
-        <div className={`message__container${isUser ? ' you' : ''}`}>
-            <p className={`message ${isUser ? 'message__you' : 'message__stranger'}`}>{msg}</p>
+        <div className="message__container">
+            <p className={`message ${isUser ? 'message__you' : 'message__stranger'}`}>
+                <span>{userName}:</span>
+                {msg}
+            </p>
         </div>
     );
 }

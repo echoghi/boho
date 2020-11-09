@@ -5,6 +5,8 @@
         padding: 15px;
         background-color: $white;
         height: calc(100vh - 270px);
+        overflow-y: auto;
+        overflow-x: hidden;
 
         &--container {
             margin: 20px;
@@ -64,16 +66,11 @@
     width: fit-content;
     margin: 0;
     max-width: 80%;
+    line-height: 1.4;
     padding: 15px;
 
     &__container {
-        margin: 15px 0;
-        display: flex;
-        justify-content: flex-start;
-
-        &.you {
-            justify-content: flex-end;
-        }
+        margin: 5px 0;
     }
 
     &__system {
@@ -82,16 +79,18 @@
         color: $grey-darker;
     }
 
-    &__stranger {
-        background-color: $grey-light;
-        border-radius: 0 6px 6px 6px;
+    span {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
     }
 
-    &__you {
-        background-color: $primary;
-        border-radius: 6px 0 6px 6px;
-        color: $white;
-        line-height: 1.4;
+    &__stranger span {
+        color: red;
+    }
+
+    &__you span {
+        color: $primary;
     }
 }
 
