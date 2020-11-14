@@ -11,9 +11,10 @@ app.set('trust proxy', true);
 
 app.get('/count', async (req, res) => {
     const socketIDs = Object.keys(io.sockets.connected);
-    const count = socketIDs.length;
+    const socketCount = socketIDs.length;
+    const count = queue.collection.length;
 
-    res.send({ statusCode: 200, count, socketIDs });
+    res.send({ statusCode: 200, count, socketCount, socketIDs });
 });
 
 app.get('/ipinfo', (req, res) => {
