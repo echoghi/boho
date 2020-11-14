@@ -1,5 +1,5 @@
-// Last in, first out (LIFO principle)
-module.exports = function Stack() {
+// First in, first out (FIFO principle)
+module.exports = function Queue() {
     this.collection = [];
 
     this.print = () => {
@@ -7,8 +7,8 @@ module.exports = function Stack() {
         console.log(`Queue (${this.collection.length}): [`);
         for (let i = this.collection.length; i--; ) {
             console.log({
-                sid: this.collection[i].socket.id,
-                user: this.collection[i].user
+                socketId: this.collection[i].id,
+                userId: this.collection[i].user
             });
         }
 
@@ -18,7 +18,7 @@ module.exports = function Stack() {
     this.find = (expression) => this.collection.find(expression);
 
     this.push = (item) => {
-        const existingSocket = this.find((user) => user.socket.id === item.socket.id);
+        const existingSocket = this.find((socket) => socket.id === item.id);
 
         if (!existingSocket) {
             this.collection.push(item);
@@ -26,7 +26,7 @@ module.exports = function Stack() {
     };
 
     this.remove = (id) => {
-        this.collection = this.collection.filter((user) => user.socket.id !== id);
+        this.collection = this.collection.filter((socket) => socket.id !== id);
         if (this.isEmpty()) console.log('queue emptied');
     };
 
@@ -35,7 +35,7 @@ module.exports = function Stack() {
     };
 
     this.peek = () => {
-        return this.collection[this.collection.length - 1];
+        return this.collection[0];
     };
 
     this.isEmpty = () => {

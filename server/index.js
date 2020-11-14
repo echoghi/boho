@@ -5,7 +5,7 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const fetch = require('node-fetch');
 const faker = require('faker');
-const Stack = require('./stack');
+const Queue = require('./queue');
 
 app.set('trust proxy', true);
 
@@ -21,7 +21,7 @@ app.get('/ipinfo', (req, res) => {
     const fakeIp = faker.internet.ip();
     const hash = crypto.createHash('sha256');
     const user = `0x${hash.update(fakeIp).digest('hex')}`;
-    console.log(ip, fakeIp);
+    console.log({ ip, fakeIp });
     res.send({ statusCode: 200, body: { user } });
 });
 
@@ -36,12 +36,12 @@ if (process.env.NODE_ENV === 'production') {
     app.use(bundler.middleware());
 }
 
-const queue = new Stack();
+const queue = new Queue();
 
 function pushToStack(socket, user) {
     socket.searchCount = 0;
     socket.user = user;
-    queue.push({ socket: socket, user });
+    queue.push(socket);
     queue.print();
 }
 
@@ -49,7 +49,7 @@ function removeFromStack(id) {
     queue.remove(id);
 }
 
-function delaySearch(socket, user) {
+function keepLooking(socket, user) {
     setTimeout(() => {
         socket.searchCount++;
 
@@ -66,26 +66,35 @@ function delaySearch(socket, user) {
         }
 
         findChatPartner(socket, user);
-    }, 2500);
+    }, 3000);
+}
+
+function cleanSocket(socket) {
+    delete socket.partner;
+    delete socket.user;
+    delete socket.roomName;
+    delete socket.searchCount;
 }
 
 function findChatPartner(socket, user) {
     if (queue.isEmpty()) {
-        return delaySearch(socket, user);
+        pushToStack(socket, user);
+        return keepLooking(socket, user);
     } else {
         // look at the next partner without mutating the queue
         const nextUp = queue.peek();
 
         // if the sockets are the same IP, keep searching
         if (nextUp.user === user) {
-            return delaySearch(socket, user);
+            return keepLooking(socket, user);
         }
 
-        // get the peer socket and remove both both from queue
+        // get the peer socket and remove both from queue
         const peer = queue.next();
-        queue.remove(socket.id);
 
-        socket.partner = peer.socket;
+        removeFromStack(socket.id);
+
+        socket.partner = peer;
         peer.partner = socket;
 
         // create room name
@@ -95,9 +104,8 @@ function findChatPartner(socket, user) {
         socket.roomName = roomName;
         peer.roomName = roomName;
         socket.searchCount = 0;
-
         socket.join(roomName);
-        socket.partner.join(roomName);
+        peer.join(roomName);
 
         console.log('\n');
         console.log('MATCH MADE!!!');
@@ -112,8 +120,8 @@ io.on('connection', (socket) => {
     socket.on('find partner', (user) => {
         io.to(socket.id).emit('searching');
 
-        findChatPartner(socket, user);
         pushToStack(socket, user);
+        findChatPartner(socket, user);
     });
 
     socket.on('new message', (info) => {
@@ -136,20 +144,18 @@ io.on('connection', (socket) => {
             socket.leave(socket.roomName);
             socket.partner.leave(socket.roomName);
 
-            socket.partner = null;
-            socket.roomName = '';
+            delete socket.partner;
+            delete socket.roomName;
         }
     });
 
     socket.on('disconnect', () => {
-        if (socket.partner) {
+        if (socket.roomName && socket.user) {
             io.to(socket.roomName).emit('disconnecting now', socket.user);
-            socket.partner = null;
-            socket.user = null;
-            socket.roomName = '';
         }
 
         removeFromStack(socket.id);
+        cleanSocket(socket);
     });
 });
 

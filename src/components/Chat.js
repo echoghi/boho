@@ -26,7 +26,9 @@ const chatReducer = (draft, action) => {
 
         case 'CONNECTION':
             draft.serverConnection = true;
+            draft.partnerConnection = false;
             draft.systemMessage = 'Looking for someone you can chat with...';
+            draft.messages = [];
             return;
 
         case 'SEARCHING':
@@ -168,7 +170,7 @@ export default function Chat({ isVideoChat = false }) {
     function formHandler(e) {
         e.preventDefault();
 
-        sendMessage(message);
+        sendMessage(message.trim());
         setMessage('');
     }
 
