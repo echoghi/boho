@@ -38,6 +38,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const queue = new Queue();
+let timers = {};
 
 function pushToStack(socket, user) {
     socket.searchCount = 0;
@@ -51,7 +52,7 @@ function removeFromStack(id) {
 }
 
 function keepLooking(socket, user) {
-    setTimeout(() => {
+    timers[user] = setTimeout(() => {
         socket.searchCount++;
 
         if (socket.partner) {
@@ -67,7 +68,15 @@ function keepLooking(socket, user) {
         }
 
         findChatPartner(socket, user);
-    }, 3000);
+    }, 2000);
+
+    socket.on('disconnecting now', () => {
+        if (timers[user]) {
+            console.log(`socket #${socket.id} cancelled search`);
+            clearTimeout(timers[user]);
+            socket.searchCount = 0;
+        }
+    });
 }
 
 function cleanSocket(socket) {
@@ -147,6 +156,8 @@ io.on('connection', (socket) => {
 
             delete socket.partner;
             delete socket.roomName;
+        } else {
+            socket.emit('disconnecting now', socket.user);
         }
     });
 
@@ -157,6 +168,11 @@ io.on('connection', (socket) => {
 
         removeFromStack(socket.id);
         cleanSocket(socket);
+
+        if (queue.isEmpty()) {
+            // clear timers ref
+            timers = {};
+        }
     });
 });
 

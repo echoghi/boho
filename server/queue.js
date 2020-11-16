@@ -26,8 +26,13 @@ module.exports = function Queue() {
     };
 
     this.remove = (id) => {
-        this.collection = this.collection.filter((socket) => socket.id !== id);
-        if (this.isEmpty()) console.log('queue emptied');
+        if (!this.isEmpty()) {
+            this.collection = this.collection.filter((socket) => socket.id !== id);
+
+            if (this.isEmpty()) console.log('queue emptied');
+        } else {
+            console.log(`cannot remove ${id}, queue is already empty`);
+        }
     };
 
     this.next = () => {

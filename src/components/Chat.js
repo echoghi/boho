@@ -10,10 +10,10 @@ const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000'
 const chatState = {
     user: null,
     serverConnection: false,
+    searching: false,
     partnerConnection: false,
     isPartnerTyping: false,
     disconnectedMessage: '',
-    buttonText: 'New',
     systemMessage: 'Connecting to server...',
     messages: []
 };
@@ -33,6 +33,7 @@ const chatReducer = (draft, action) => {
 
         case 'SEARCHING':
             draft.partnerConnection = false;
+            draft.searching = true;
             draft.systemMessage = 'Looking for someone you can chat with...';
             draft.disconnectedMessage = '';
             draft.messages = [];
@@ -45,24 +46,24 @@ const chatReducer = (draft, action) => {
 
         case 'CHAT_START':
             draft.partnerConnection = true;
-            draft.buttonText = 'Stop';
+            draft.confirmExit = false;
             draft.systemMessage = "You're now chatting with a random stranger.";
             draft.disconnectedMessage = '';
             return;
 
         case 'CONFIRM_EXIT':
             draft.confirmExit = true;
-            draft.buttonText = 'Really?';
             return;
 
         case 'NO_PARTNERS':
             draft.partnerConnection = false;
+            draft.searching = false;
             draft.systemMessage = "Couldn't find anyone available to chat with :(";
             return;
 
         case 'DISCONNECTING':
             draft.partnerConnection = false;
-            draft.buttonText = 'New';
+            draft.searching = false;
             draft.confirmExit = false;
             draft.disconnectedMessage = action.message;
             return;
@@ -125,7 +126,7 @@ export default function Chat({ isVideoChat = false }) {
         // update messages and scroll to bottom
         socket.on('receive message', (message) => {
             dispatch({ type: 'SET_MESSAGES', message });
-            console.log(chatRef.current.height, chatRef.current.scrollHeight);
+
             chatRef.current.scrollTop = chatRef.current.scrollHeight;
         });
         // trigger state updates
@@ -170,7 +171,7 @@ export default function Chat({ isVideoChat = false }) {
     function formHandler(e) {
         e.preventDefault();
 
-        sendMessage(message.trim());
+        sendMessage(message);
         setMessage('');
     }
 
@@ -208,16 +209,30 @@ export default function Chat({ isVideoChat = false }) {
         socket.emit('disconnecting now');
     }
 
-    const buttonHandler = () => {
-        if (state.partnerConnection) {
+    const Button = () => {
+        let handler;
+        let text;
+        let className = '';
+
+        if (state.partnerConnection || state.searching) {
+            className = 'alt';
             if (state.confirmExit) {
-                return stopChat;
+                handler = stopChat;
+                text = 'Really?';
             } else {
-                return confirmExit;
+                handler = confirmExit;
+                text = 'Stop';
             }
         } else {
-            return findNewPartner;
+            handler = findNewPartner;
+            text = 'New';
         }
+
+        return (
+            <button type="button" onClick={handler} className={className}>
+                {text}
+            </button>
+        );
     };
 
     return (
@@ -246,9 +261,7 @@ export default function Chat({ isVideoChat = false }) {
                 </div>
 
                 <form className="text__chat--controls" onSubmit={formHandler}>
-                    <button type="button" onClick={buttonHandler()}>
-                        {state.buttonText}
-                    </button>
+                    <Button />
                     <textarea
                         ref={textRef}
                         onChange={inputHandler}
