@@ -4,6 +4,7 @@ import useSocket from '../hooks/useSocket';
 import { throttle } from '../utils';
 
 import Message from './Message';
+import SystemMessage from './SystemMessage';
 
 const socketURL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'wss://www.bohochat.com';
 
@@ -90,6 +91,7 @@ export default function Chat({ isVideoChat = false }) {
     const videoRef = useRef();
     const textRef = useRef();
     const chatRef = useRef();
+    let typingTimer;
 
     // request user video feed
     useEffect(async () => {
@@ -120,13 +122,15 @@ export default function Chat({ isVideoChat = false }) {
         dispatch({ type: 'SET_USER', user });
 
         socket.emit('find partner', user);
+
+        return () => clearTimeout(typingTimer);
     }, []);
 
     useEffect(() => {
-        // update messages and scroll to bottom
         socket.on('receive message', (message) => {
+            // update messages
             dispatch({ type: 'SET_MESSAGES', message });
-
+            // scroll chat to most recent msg
             chatRef.current.scrollTop = chatRef.current.scrollHeight;
         });
         // trigger state updates
@@ -144,11 +148,13 @@ export default function Chat({ isVideoChat = false }) {
             textRef.current.focus();
         });
 
-        // update system msg and scroll to bottom
         socket.on('disconnecting now', (userName) => {
             const message = userName === state.user ? 'You disconnected.' : 'Your partner disconnected.';
 
+            // update system msg
             dispatch({ type: 'DISCONNECTING', message });
+
+            // scroll chat to most recent msg
             chatRef.current.scrollTop = chatRef.current.scrollHeight;
         });
 
@@ -176,6 +182,10 @@ export default function Chat({ isVideoChat = false }) {
     }
 
     function typingHandler(e) {
+        if (typingTimer) {
+            console.log('cleared');
+            clearTimeout(typingTimer);
+        }
         throttle(socket.emit('typing', state.user), 1000);
 
         if (e.which === 13) {
@@ -187,7 +197,7 @@ export default function Chat({ isVideoChat = false }) {
             socket.emit('stop typing', state.user);
         }
 
-        setTimeout(() => socket.emit('stop typing', state.user), 1500);
+        typingTimer = setTimeout(() => socket.emit('stop typing', state.user), 2000);
     }
 
     function inputHandler(e) {
@@ -245,19 +255,15 @@ export default function Chat({ isVideoChat = false }) {
             )}
             <div className="text__chat--container">
                 <div className="text__chat" ref={chatRef}>
-                    <div className="message__container">
-                        <p className="message message__system">{state.systemMessage}</p>
-                    </div>
+                    <SystemMessage text={state.systemMessage} />
+
                     {state.messages.map((message) => (
                         <Message {...message} key={message.key} isUser={state.user === message.user} />
                     ))}
 
                     {state.isPartnerTyping && <p>Stranger is typing...</p>}
-                    {!!state.disconnectedMessage && (
-                        <div className="message__container">
-                            <p className="message message__system">{state.disconnectedMessage}</p>
-                        </div>
-                    )}
+
+                    {!!state.disconnectedMessage && <SystemMessage text={state.disconnectedMessage} />}
                 </div>
 
                 <form className="text__chat--controls" onSubmit={formHandler}>
